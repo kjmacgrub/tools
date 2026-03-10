@@ -185,9 +185,8 @@
   function copyPrompt() {
     const title     = document.getElementById('title').value.trim() || '(untitled)';
     const date      = document.getElementById('date').value || today;
-    const attendees = document.getElementById('attendees').value.trim();
+
     const notes     = document.getElementById('notes').value.trim();
-    const actions   = document.getElementById('actions').value.trim();
 
     const parts = [
       `Capture the following as a meeting in 2Brain:`,
