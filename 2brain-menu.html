@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2Brain Commands</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0e0e0e;
+    --surface: #161616;
+    --border: #2a2a2a;
+    --accent: #00c896;
+    --accent-dim: rgba(0,200,150,0.08);
+    --text: #e8e8e8;
+    --text-dim: #666;
+    --text-mid: #999;
+    --copied: #f0c040;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    min-height: 100vh;
+    padding: 32px 24px;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+
+  .subtitle {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 16px 0 28px;
+  }
+
+  .section {
+    margin-bottom: 32px;
+  }
+
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .cmd {
+    display: flex;
+    align-items: stretch;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    overflow: hidden;
+  }
+
+  .cmd:hover {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  .cmd:hover .cmd-label {
+    color: var(--text);
+  }
+
+  .cmd-body {
+    flex: 1;
+    padding: 10px 14px;
+  }
+
+  .cmd-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-mid);
+    margin-bottom: 2px;
+    transition: color 0.15s;
+  }
+
+  .cmd-preview {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .cmd-copy {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 14px;
+    border-left: 1px solid var(--border);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    min-width: 52px;
+    transition: all 0.15s;
+    user-select: none;
+  }
+
+  .cmd:hover .cmd-copy {
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+
+  .cmd.copied {
+    border-color: var(--copied);
+    background: rgba(240,192,64,0.06);
+  }
+
+  .cmd.copied .cmd-copy {
+    color: var(--copied);
+    border-left-color: var(--copied);
+  }
+
+  .cmd.copied .cmd-label {
+    color: var(--copied);
+  }
+
+  footer {
+    margin-top: 40px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    line-height: 1.8;
+  }
+
+  .tip {
+    display: inline-block;
+    background: var(--accent-dim);
+    border: 1px solid rgba(0,200,150,0.2);
+    border-radius: 3px;
+    padding: 2px 7px;
+    font-size: 10px;
+    color: var(--accent);
+    font-family: 'IBM Plex Mono', monospace;
+    margin-bottom: 20px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>2Brain</h1>
+  <span class="subtitle">// command menu</span>
+</header>
+<div class="divider"></div>
+
+<span class="tip">click any row to copy → paste into Claude</span>
+
+<div class="section">
+  <div class="section-label">Weekly Review</div>
+
+  <div class="cmd" onclick="copy(this, 'Pull my 2Brain thoughts from the last 7 days and give me a summary — what moved, what\'s still blocked, and what I haven\'t captured yet.')">
+    <div class="cmd-body">
+      <div class="cmd-label">Friday Weekly Review</div>
+      <div class="cmd-preview">Pull last 7 days → summarize what moved, blocked, uncaptured</div>
+    </div>
+    <div class="cmd-copy">copy</div>
+  </div>
+
+  <div class="cmd" onclick="copy(this, 'List all thoughts captured in the last 7 days, grouped by type (task, observation, idea).')">
+    <div class="cmd-body">
+      <div class="cmd-label">List This Week (by type)</div>
+      <div class="cmd-preview">Last 7 days grouped by task / observation / idea</div>
+    </div>
+    <div class="cmd-copy">copy</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-label">Projects</div>
+
+  <div class="cmd" onclick="copy(this, 'Search 2Brain for everything I know about the Delivery project — status, blockers, CSV dependencies.')">
+    <div class="cmd-body">
+      <div class="cmd-label">Delivery Project Status</div>
+      <div class="cmd-preview">Status, blockers, CSV dependencies</div>
+    </div>
+    <div class="cmd-copy">copy</div>
+  </div>
+
+  <div class="cmd" onclick="copy(this, 'Search 2Brain for everything I know about the Produce Processing project — status, adoption, data management.')">
+    <div class="cmd-body">
+      <div class="cmd-label">Produce Processing Status</div>
+      <div class="cmd-preview">Status, adoption, data management</div>
+    </div>
+    <div class="cmd-copy">copy</div>
+  </div>
+
+  <div class="cmd" onclick="copy(this, 'Search 2Brain for everything I know about the SBS (Sendup by Sales) project — status, IT handshake, API blocker.')">
+    <div class="cmd-body">
+      <div class="cmd-label">SBS Project Status</div>
+      <div class="cmd-preview">Status, IT handshake, API blocker</div>
+    </div>
+    <div class="cmd-copy">copy</div>
+  </div>
+
+  <div class="cmd" onclick="copy(this, 'Search 2Brain for my open tasks related to Clover, CSV exports, or API access.')">
+    <div class="cmd-body">
+      <div class="cmd-label">Clover / CSV / API Tasks</div>
+      <div class="cmd-preview">Open tasks on data pipeline and IT dependencies</div>
+    </div>
+    <div class="cmd-copy">copy</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-label">People</div>
+
+  <div class="cmd" onclick="copy(this, 'Search 2Brain for everything I\'ve captured about Joe S — his priorities, pressures, and what I should keep in mind.')">
+    <div class="cmd-body">
+      <div class="cmd-label">Joe S — Context</div>
+      <div class="cmd-preview">Priorities, pressures, political situation, scaling ambition</div>
+    </div>
+    <div class="cmd-copy">copy</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-label">Design & Architecture</div>
+
+  <div class="cmd" onclick="copy(this, 'Search 2Brain for my design principles — color cycling, three-week window, and any other UI standards I\'ve captured.')">
+    <div class="cmd-body">
+      <div class="cmd-label">Design Principles</div>
+      <div class="cmd-preview">Color cycling, three-week window, UI standards</div>
+    </div>
+    <div class="cmd-copy">copy</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-label">Personal Finance</div>
+
+  <div class="cmd" onclick="copy(this, 'Search 2Brain for my personal finance project — goals, cash flow, budget, Hilary stress reduction, Caden and Tiger.')">
+    <div class="cmd-body">
+      <div class="cmd-label">Finance Project — Goals & Status</div>
+      <div class="cmd-preview">Cash flow, budget, family goals, surplus target</div>
+    </div>
+    <div class="cmd-copy">copy</div>
+  </div>
+
+  <div class="cmd" onclick="copy(this, 'Search 2Brain for my retirement planning thoughts — Roth conversion, Social Security timing, pension, segment rates.')">
+    <div class="cmd-body">
+      <div class="cmd-label">Retirement Planning</div>
+      <div class="cmd-preview">Roth, SS timing, pension, segment rates</div>
+    </div>
+    <div class="cmd-copy">copy</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-label">Capture</div>
+
+  <div class="cmd" onclick="copy(this, 'I want to capture something in 2Brain: ')">
+    <div class="cmd-body">
+      <div class="cmd-label">Capture a Thought</div>
+      <div class="cmd-preview">I want to capture something in 2Brain: [your thought]</div>
+    </div>
+    <div class="cmd-copy">copy</div>
+  </div>
+
+  <div class="cmd" onclick="copy(this, 'Give me my 2Brain stats — total thoughts, breakdown by type, top topics.')">
+    <div class="cmd-body">
+      <div class="cmd-label">Stats Overview</div>
+      <div class="cmd-preview">Total thoughts, types, top topics</div>
+    </div>
+    <div class="cmd-copy">copy</div>
+  </div>
+</div>
+
+<footer>
+  bookmark this page → open anytime → click to copy → paste into Claude<br>
+  add new commands by editing the HTML source
+</footer>
+
+<script>
+  function copy(el, text) {
+    navigator.clipboard.writeText(text).then(() => {
+      el.classList.add('copied');
+      el.querySelector('.cmd-copy').textContent = '✓ done';
+      setTimeout(() => {
+        el.classList.remove('copied');
+        el.querySelector('.cmd-copy').textContent = 'copy';
+      }, 1800);
+    });
+  }
+</script>
+</body>
+</html>
