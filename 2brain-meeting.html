@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2Brain — Capture Meeting</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0e0e0e;
+    --surface: #161616;
+    --border: #2a2a2a;
+    --accent: #00c896;
+    --accent-dim: rgba(0,200,150,0.08);
+    --text: #e8e8e8;
+    --text-dim: #666;
+    --text-mid: #999;
+    --copied: #f0c040;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    min-height: 100vh;
+    padding: 32px 24px;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+
+  .subtitle {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 16px 0 28px;
+  }
+
+  .field {
+    margin-bottom: 18px;
+  }
+
+  label {
+    display: block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  input[type="text"],
+  input[type="date"],
+  textarea {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 9px 12px;
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s;
+    resize: vertical;
+  }
+
+  input[type="text"]:focus,
+  input[type="date"]:focus,
+  textarea:focus {
+    border-color: var(--accent);
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.5);
+  }
+
+  textarea { min-height: 100px; line-height: 1.6; }
+  textarea.tall { min-height: 140px; }
+
+  .copy-btn {
+    width: 100%;
+    padding: 12px;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    color: var(--accent);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-top: 8px;
+  }
+
+  .copy-btn:hover { background: rgba(0,200,150,0.15); }
+
+  .copy-btn.copied {
+    border-color: var(--copied);
+    color: var(--copied);
+    background: rgba(240,192,64,0.06);
+  }
+
+  .tip {
+    display: inline-block;
+    background: var(--accent-dim);
+    border: 1px solid rgba(0,200,150,0.2);
+    border-radius: 3px;
+    padding: 2px 7px;
+    font-size: 10px;
+    color: var(--accent);
+    font-family: 'IBM Plex Mono', monospace;
+    margin-bottom: 24px;
+  }
+
+  footer {
+    margin-top: 32px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>2Brain</h1>
+  <span class="subtitle">// capture meeting</span>
+</header>
+<div class="divider"></div>
+
+<span class="tip">fill in fields → copy prompt → paste into Claude</span>
+
+<div class="field">
+  <label>Title</label>
+  <input type="text" id="title" placeholder="e.g. Nate Jones — AI Agents video">
+</div>
+
+<div class="field">
+  <label>Date</label>
+  <input type="date" id="date">
+</div>
+
+<div class="field">
+  <label>Attendees</label>
+  <input type="text" id="attendees" placeholder="names, comma separated">
+</div>
+
+<div class="field">
+  <label>Notes</label>
+  <textarea class="tall" id="notes" placeholder="what was discussed..."></textarea>
+</div>
+
+<div class="field">
+  <label>Action Items</label>
+  <textarea id="actions" placeholder="one per line"></textarea>
+</div>
+
+<button class="copy-btn" id="copy-btn" onclick="copyPrompt()">copy prompt → paste into Claude</button>
+
+<footer>
+  paste the copied prompt into Claude — it will capture the meeting to 2Brain
+</footer>
+
+<script>
+  // Default date to today
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('date').value = today;
+
+  function copyPrompt() {
+    const title     = document.getElementById('title').value.trim() || '(untitled)';
+    const date      = document.getElementById('date').value || today;
+    const attendees = document.getElementById('attendees').value.trim();
+    const notes     = document.getElementById('notes').value.trim();
+    const actions   = document.getElementById('actions').value.trim();
+
+    const parts = [
+      `Capture the following as a meeting in 2Brain:`,
+      ``,
+      `Title: ${title}`,
+      `Date: ${date}`,
+    ];
+
+    if (attendees) parts.push(`Attendees: ${attendees}`);
+    if (notes)     parts.push(`\nNotes:\n${notes}`);
+    if (actions)   parts.push(`\nAction items:\n${actions}`);
+
+    const prompt = parts.join('\n');
+
+    navigator.clipboard.writeText(prompt).then(() => {
+      const btn = document.getElementById('copy-btn');
+      btn.textContent = '✓ copied — paste into Claude';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = 'copy prompt → paste into Claude';
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  }
+</script>
+</body>
+</html>
