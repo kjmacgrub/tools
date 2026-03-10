@@ -199,15 +199,35 @@
 
     const prompt = parts.join('\n');
 
-    navigator.clipboard.writeText(prompt).then(() => {
-      const btn = document.getElementById('copy-btn');
+    const btn = document.getElementById('copy-btn');
+
+    function onSuccess() {
       btn.textContent = '✓ copied — paste into Claude';
       btn.classList.add('copied');
       setTimeout(() => {
         btn.textContent = 'copy prompt → paste into Claude';
         btn.classList.remove('copied');
       }, 2000);
-    });
+    }
+
+    function fallback() {
+      const ta = document.createElement('textarea');
+      ta.value = prompt;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      onSuccess();
+    }
+
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(prompt).then(onSuccess).catch(fallback);
+    } else {
+      fallback();
+    }
   }
 </script>
 </body>
