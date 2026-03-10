@@ -157,28 +157,18 @@
 <span class="tip">fill in fields → copy prompt → paste into Claude</span>
 
 <div class="field">
-  <label>Title</label>
-  <input type="text" id="title" placeholder="e.g. Nate Jones — AI Agents video">
-</div>
-
-<div class="field">
   <label>Date</label>
   <input type="date" id="date">
 </div>
 
 <div class="field">
-  <label>Attendees</label>
-  <input type="text" id="attendees" placeholder="names, comma separated">
+  <label>Topic</label>
+  <input type="text" id="title" placeholder="e.g. Nate Jones — AI Agents video">
 </div>
 
 <div class="field">
   <label>Notes</label>
   <textarea class="tall" id="notes" placeholder="what was discussed..."></textarea>
-</div>
-
-<div class="field">
-  <label>Action Items</label>
-  <textarea id="actions" placeholder="one per line"></textarea>
 </div>
 
 <button class="copy-btn" id="copy-btn" onclick="copyPrompt()">copy prompt → paste into Claude</button>
@@ -202,13 +192,11 @@
     const parts = [
       `Capture the following as a meeting in 2Brain:`,
       ``,
-      `Title: ${title}`,
       `Date: ${date}`,
+      `Topic: ${title}`,
     ];
 
-    if (attendees) parts.push(`Attendees: ${attendees}`);
-    if (notes)     parts.push(`\nNotes:\n${notes}`);
-    if (actions)   parts.push(`\nAction items:\n${actions}`);
+    if (notes) parts.push(`\nNotes:\n${notes}`);
 
     const prompt = parts.join('\n');
 
