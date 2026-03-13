@@ -15,7 +15,7 @@
     --surface2: #1e1e1e;
     --border: #2a2a2a;
     --accent: #00c896;
-    --accent-dim: rgba(0,200,150,0.08);
+    --accent-dim: rgba(0,200,150,0.06);
     --text: #e8e8e8;
     --text-dim: #666;
     --text-mid: #999;
@@ -32,16 +32,11 @@
     font-family: 'IBM Plex Sans', sans-serif;
     min-height: 100vh;
     padding: 32px 24px;
-    max-width: 720px;
+    max-width: 900px;
     margin: 0 auto;
   }
 
-  header {
-    display: flex;
-    align-items: baseline;
-    gap: 12px;
-    margin-bottom: 8px;
-  }
+  header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px; }
 
   h1 {
     font-family: 'IBM Plex Mono', monospace;
@@ -51,25 +46,11 @@
     letter-spacing: -0.5px;
   }
 
-  .subtitle {
-    font-size: 12px;
-    color: var(--text-dim);
-    font-family: 'IBM Plex Mono', monospace;
-  }
+  .subtitle { font-size: 12px; color: var(--text-dim); font-family: 'IBM Plex Mono', monospace; }
 
-  .divider {
-    height: 1px;
-    background: var(--border);
-    margin: 16px 0 20px;
-  }
+  .divider { height: 1px; background: var(--border); margin: 16px 0 20px; }
 
-  /* ---- Controls ---- */
-  .controls {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-bottom: 24px;
-  }
+  .controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
 
   .search-box {
     background: var(--surface);
@@ -83,19 +64,10 @@
     outline: none;
     transition: border-color 0.15s;
   }
-
-  .search-box:focus {
-    border-color: var(--accent);
-  }
-
+  .search-box:focus { border-color: var(--accent); }
   .search-box::placeholder { color: var(--text-dim); }
 
-  .filter-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    align-items: center;
-  }
+  .filter-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 
   .filter-label {
     font-family: 'IBM Plex Mono', monospace;
@@ -118,11 +90,9 @@
     transition: all 0.15s;
     user-select: none;
   }
-
   .chip:hover { border-color: var(--accent); color: var(--text); }
   .chip.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
 
-  /* ---- Stats bar ---- */
   .stats-bar {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 10px;
@@ -130,24 +100,64 @@
     margin-bottom: 16px;
   }
 
-  /* ---- Feed ---- */
-  .feed { display: flex; flex-direction: column; gap: 8px; }
+  /* Sections */
+  .sections { display: flex; flex-direction: column; gap: 10px; }
 
-  .thought-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 12px 14px;
-    transition: border-color 0.15s;
-  }
+  .section { border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
 
-  .thought-card:hover { border-color: #3a3a3a; }
-
-  .card-header {
+  .section-header {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 8px;
+    padding: 9px 14px;
+    background: var(--surface2);
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.1s;
+  }
+  .section-header:hover { background: #232323; }
+
+  .section-toggle { font-size: 10px; color: var(--text-dim); flex-shrink: 0; width: 10px; }
+
+  .section-name {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .section-count {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-left: auto;
+  }
+
+  .section-body { border-top: 1px solid var(--border); }
+
+  /* Entries */
+  .entry-item { border-bottom: 1px solid var(--border); }
+  .entry-item:last-child { border-bottom: none; }
+
+  .entry-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 14px;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .entry-row:hover { background: #1b1b1b; }
+  .entry-row.open { background: var(--accent-dim); border-left: 2px solid var(--accent); padding-left: 12px; }
+
+  .entry-date {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+    width: 44px;
   }
 
   .type-badge {
@@ -160,7 +170,6 @@
     letter-spacing: 0.5px;
     flex-shrink: 0;
   }
-
   .badge-observation { background: rgba(59,130,246,0.12); color: var(--type-observation); }
   .badge-task        { background: rgba(245,158,11,0.12); color: var(--type-task); }
   .badge-idea        { background: rgba(168,85,247,0.12); color: var(--type-idea); }
@@ -168,26 +177,32 @@
   .badge-person_note { background: rgba(236,72,153,0.12); color: var(--type-person_note); }
   .badge-meeting     { background: rgba(16,185,129,0.12); color: #10b981; }
 
-  .card-date {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
-    color: var(--text-dim);
-    margin-left: auto;
-    flex-shrink: 0;
+  .entry-preview {
+    font-size: 12px;
+    color: var(--text-mid);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+    min-width: 0;
   }
 
-  .card-content {
-    font-size: 13px;
-    line-height: 1.6;
-    color: var(--text);
-    margin-bottom: 10px;
+  /* Expanded detail */
+  .entry-detail {
+    display: none;
+    padding: 10px 14px 14px 78px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
   }
 
-  .card-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-  }
+  .entry-content { margin-bottom: 10px; }
+
+  .md-h2 { display: block; color: var(--accent); font-weight: 500; font-size: 12px; padding: 6px 0 2px; }
+  .md-h3 { display: block; color: var(--text); font-weight: 500; font-size: 12px; padding: 4px 0 1px; }
+  .md-p  { display: block; color: var(--text-mid); font-size: 12px; line-height: 1.6; min-height: 5px; }
+  .md-li { display: block; color: var(--text-mid); font-size: 12px; line-height: 1.6; padding-left: 8px; }
+
+  .detail-meta { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
 
   .meta-pill {
     font-family: 'IBM Plex Mono', monospace;
@@ -197,41 +212,12 @@
     border: 1px solid var(--border);
     color: var(--text-dim);
   }
-
   .meta-pill.person { border-color: rgba(236,72,153,0.3); color: #ec4899; background: rgba(236,72,153,0.05); }
-  .meta-pill.topic  { border-color: var(--border); color: var(--text-dim); }
   .meta-pill.action { border-color: rgba(245,158,11,0.3); color: var(--type-task); background: rgba(245,158,11,0.05); }
 
-  .load-more {
-    margin-top: 16px;
-    text-align: center;
-  }
-
-  .load-more button {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    color: var(--text-mid);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    padding: 8px 20px;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-
-  .load-more button:hover { border-color: var(--accent); color: var(--accent); }
-
-  .empty {
+  .empty, .loading {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 12px;
-    color: var(--text-dim);
-    text-align: center;
-    padding: 40px 0;
-  }
-
-  .loading {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
     color: var(--text-dim);
     text-align: center;
     padding: 40px 0;
@@ -261,20 +247,47 @@
 </div>
 
 <div class="stats-bar" id="stats">loading...</div>
-<div class="feed" id="feed"><div class="loading">fetching thoughts...</div></div>
-<div class="load-more" id="load-more" style="display:none">
-  <button onclick="loadMore()">load more</button>
-</div>
+<div id="feed"><div class="loading">fetching thoughts...</div></div>
 
 <script>
   const SUPABASE_URL = 'https://wiabftxfumvzbttqgmtq.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_y0N-mQ5ayjlQPAHqiVisGQ_dDwDB380';
-  const PAGE_SIZE = 50;
+
+  const APP_ORDER = ['Delivery', 'SBS', 'CEF', 'Budget', '2Brain', 'General'];
+
+  // First matching rule wins — topics checked before content keywords
+  const APP_RULES = [
+    {
+      app: 'Delivery',
+      topics: ['delivery', 'cloud run', 'firebase', 'firestore'],
+      content: ['delivery app', 'cloud run', 'nuclear wipe', 'import screen', 'high count', 'high-count', 'scan_downloads'],
+    },
+    {
+      app: 'SBS',
+      topics: ['sbs', 'inventory management', 'retail operations', 'backstock', 'back-stock'],
+      content: ['sbs', 'back-stock', 'backstock', 'pull log', 'shelf capacity', 'store back', '/sbs/'],
+    },
+    {
+      app: 'CEF',
+      topics: ['cef', 'investment', 'portfolio', 'nav', 'closed-end', 'distribution'],
+      content: ['cef', 'closed-end', 'cef portfolio', 'nav sparkline', 'nav history', 'cef.db', '/cef/'],
+    },
+    {
+      app: 'Budget',
+      topics: ['budget', 'cash flow', 'quicken', 'sage', 'tax'],
+      content: ['budget planner', 'cash flow', 'quicken', 'budget api', 'budget/api', 'sage green'],
+    },
+    {
+      app: '2Brain',
+      topics: ['knowledge management', 'second brain', 'open brain', 'memory system'],
+      content: ['2brain', 'open brain', 'ingest-thought', 'brain-mcp', 'brain journal'],
+    },
+  ];
 
   let allThoughts = [];
   let filtered = [];
-  let displayed = 0;
   let activeType = 'all';
+  let openSections = new Set(APP_ORDER); // all open by default
 
   async function fetchThoughts() {
     const res = await fetch(
@@ -283,6 +296,24 @@
     );
     if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
     return res.json();
+  }
+
+  function detectApp(t) {
+    const meta = t.metadata || {};
+    const topics = (meta.topics || []).join(' ').toLowerCase();
+    const content = t.content.toLowerCase().substring(0, 400);
+    for (const rule of APP_RULES) {
+      if (rule.topics.some(k => topics.includes(k))) return rule.app;
+      if (rule.content.some(k => content.includes(k))) return rule.app;
+    }
+    return 'General';
+  }
+
+  function groupByApp(thoughts) {
+    const groups = {};
+    APP_ORDER.forEach(a => groups[a] = []);
+    for (const t of thoughts) groups[detectApp(t)].push(t);
+    return groups;
   }
 
   function setType(type) {
@@ -303,69 +334,121 @@
           t.content,
           (meta.topics || []).join(' '),
           (meta.people || []).join(' '),
-          (meta.action_items || []).join(' ')
+          (meta.action_items || []).join(' '),
         ].join(' ').toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
     });
-    displayed = 0;
     renderFeed();
+  }
+
+  // Section toggle: DOM manipulation so scroll position doesn't jump
+  function toggleSection(app) {
+    const section = document.querySelector(`.section[data-section="${app}"]`);
+    if (!section) return;
+    const body = section.querySelector('.section-body');
+    const toggle = section.querySelector('.section-toggle');
+    if (openSections.has(app)) {
+      openSections.delete(app);
+      body.style.display = 'none';
+      toggle.textContent = '▸';
+    } else {
+      openSections.add(app);
+      body.style.display = '';
+      toggle.textContent = '▾';
+    }
+  }
+
+  // Entry toggle: DOM manipulation for same reason
+  function toggleEntry(id) {
+    const item = document.querySelector(`.entry-item[data-id="${id}"]`);
+    if (!item) return;
+    const detail = item.querySelector('.entry-detail');
+    const row = item.querySelector('.entry-row');
+    // detail starts hidden via CSS (display:none), inline style is '' initially
+    const isOpen = detail.style.display === 'block';
+    detail.style.display = isOpen ? 'none' : 'block';
+    row.classList.toggle('open', !isOpen);
+  }
+
+  function previewText(content) {
+    const lines = content.split('\n')
+      .map(l => l.replace(/^#+\s*/, '').replace(/\*+/g, '').trim())
+      .filter(l => l && !/^session summary/i.test(l));
+    const first = lines[0] || content.trim();
+    return first.length > 130 ? first.slice(0, 130) + '…' : first;
+  }
+
+  function renderMarkdown(raw) {
+    return raw.split('\n').map(line => {
+      const e = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      if (/^### /.test(line)) return `<div class="md-h3">${e.replace(/^### /, '')}</div>`;
+      if (/^## /.test(line)) return `<div class="md-h2">${e.replace(/^## /, '')}</div>`;
+      if (/^- /.test(line))  return `<div class="md-li">• ${e.replace(/^- /, '')}</div>`;
+      return `<div class="md-p">${e.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</div>`;
+    }).join('');
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function renderEntry(t) {
+    const meta = t.metadata || {};
+    const type = meta.type || 'observation';
+    const dateStr = new Date(t.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+    const pills = [
+      ...(meta.people || []).map(p => `<span class="meta-pill person">${esc(p)}</span>`),
+      ...(meta.topics || []).map(tp => `<span class="meta-pill topic">${esc(tp)}</span>`),
+      ...(meta.action_items || []).map(a => `<span class="meta-pill action">→ ${esc(a)}</span>`),
+    ].join('');
+
+    return `<div class="entry-item" data-id="${t.id}">
+      <div class="entry-row" onclick="toggleEntry('${t.id}')">
+        <span class="entry-date">${dateStr}</span>
+        <span class="type-badge badge-${type}">${type.replace('_', ' ')}</span>
+        <span class="entry-preview">${esc(previewText(t.content))}</span>
+      </div>
+      <div class="entry-detail">
+        <div class="entry-content">${renderMarkdown(t.content)}</div>
+        ${pills ? `<div class="detail-meta">${pills}</div>` : ''}
+      </div>
+    </div>`;
   }
 
   function renderFeed() {
     const feed = document.getElementById('feed');
     const stats = document.getElementById('stats');
-    const loadMore = document.getElementById('load-more');
 
-    const slice = filtered.slice(0, displayed + PAGE_SIZE);
-    displayed = slice.length;
-
-    stats.textContent = `${filtered.length} thought${filtered.length !== 1 ? 's' : ''}${activeType !== 'all' ? ` · ${activeType}` : ''} · ${allThoughts.length} total`;
+    stats.textContent = `${filtered.length} thought${filtered.length !== 1 ? 's' : ''} · ${allThoughts.length} total`;
 
     if (filtered.length === 0) {
       feed.innerHTML = '<div class="empty">no thoughts found</div>';
-      loadMore.style.display = 'none';
       return;
     }
 
-    feed.innerHTML = slice.map(t => renderCard(t)).join('');
-    loadMore.style.display = displayed < filtered.length ? 'block' : 'none';
-  }
-
-  function loadMore() {
-    const slice = filtered.slice(0, displayed + PAGE_SIZE);
-    displayed = slice.length;
-    document.getElementById('feed').innerHTML = slice.map(t => renderCard(t)).join('');
-    document.getElementById('load-more').style.display = displayed < filtered.length ? 'block' : 'none';
-  }
-
-  function renderCard(t) {
-    const meta = t.metadata || {};
-    const type = meta.type || 'observation';
-    const date = new Date(t.created_at);
-    const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    const timeStr = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-
-    const pills = [
-      ...(meta.people || []).map(p => `<span class="meta-pill person">${esc(p)}</span>`),
-      ...(meta.topics || []).map(t => `<span class="meta-pill topic">${esc(t)}</span>`),
-      ...(meta.action_items || []).map(a => `<span class="meta-pill action">→ ${esc(a)}</span>`),
-    ].join('');
-
-    return `
-    <div class="thought-card">
-      <div class="card-header">
-        <span class="type-badge badge-${type}">${type.replace('_', ' ')}</span>
-        <span class="card-date">${dateStr} · ${timeStr}</span>
-      </div>
-      <div class="card-content">${esc(t.content)}</div>
-      ${pills ? `<div class="card-meta">${pills}</div>` : ''}
-    </div>`;
-  }
-
-  function esc(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const groups = groupByApp(filtered);
+    const parts = [];
+    for (const app of APP_ORDER) {
+      const thoughts = groups[app];
+      if (!thoughts.length) continue;
+      const isOpen = openSections.has(app);
+      parts.push(`
+        <div class="section" data-section="${app}">
+          <div class="section-header" onclick="toggleSection('${app}')">
+            <span class="section-toggle">${isOpen ? '▾' : '▸'}</span>
+            <span class="section-name">${app}</span>
+            <span class="section-count">${thoughts.length}</span>
+          </div>
+          <div class="section-body"${isOpen ? '' : ' style="display:none"'}>
+            ${thoughts.map(t => renderEntry(t)).join('')}
+          </div>
+        </div>
+      `);
+    }
+    feed.innerHTML = `<div class="sections">${parts.join('')}</div>`;
   }
 
   fetchThoughts()
