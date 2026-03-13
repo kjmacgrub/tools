@@ -664,8 +664,7 @@
     if (selectedDate) {
       const entry = dateIndex[selectedDate] || { created: [], ref: [] };
       const allIds = new Set([...entry.created, ...entry.ref]);
-      const dayThoughts = allThoughts.filter(t => allIds.has(t.id) &&
-        (activeType === 'all' || (t.metadata?.type || 'observation') === activeType));
+      const dayThoughts = filtered.filter(t => allIds.has(t.id));
 
       const label = new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US',
         { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
