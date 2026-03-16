@@ -823,6 +823,24 @@
     feed.innerHTML = `<div class="sections">${parts.join('')}</div>`;
   }
 
+  const KEY_MAP = {
+    'a': 'all',
+    'i': 'idea',
+    'm': 'meeting',
+    'o': 'observation',
+    'p': 'person_note',
+    'r': 'reference',
+    's': 'summary',
+    't': 'task',
+  };
+
+  document.addEventListener('keydown', e => {
+    if (document.activeElement === document.getElementById('search')) return;
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const type = KEY_MAP[e.key];
+    if (type) setType(type);
+  });
+
   fetchThoughts()
     .then(data => {
       allThoughts = data;
