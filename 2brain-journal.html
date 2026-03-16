@@ -25,6 +25,7 @@
     --type-reference: #6b7280;
     --type-person_note: #ec4899;
     --type-summary: #06b6d4;
+    --today: #f97316;
   }
 
   body {
@@ -319,9 +320,10 @@
   .cal-day.heat-4 { background: rgba(0,200,150,0.30); border-color: rgba(0,200,150,0.70); }
   .cal-day[class*="heat-"] .cal-day-num { color: var(--text); }
   .cal-day.heat-4 .cal-day-num { color: var(--accent); }
-  .cal-day.today .cal-day-num { color: var(--accent); font-weight: 500; }
-  .cal-day.selected { background: var(--accent-dim); border-color: var(--accent); }
-  .cal-day.selected .cal-day-num { color: var(--accent); }
+  .cal-day.today { border-color: rgba(249,115,22,0.5); }
+  .cal-day.today .cal-day-num { color: var(--today); font-weight: 500; }
+  .cal-day.selected { background: rgba(249,115,22,0.10); border-color: var(--today); }
+  .cal-day.selected .cal-day-num { color: var(--today); }
 
   .cal-dots {
     display: flex;
