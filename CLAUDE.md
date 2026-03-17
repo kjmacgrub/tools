@@ -7,7 +7,7 @@
 ## Git
 - This directory is a **nested git repo** inside `/Users/km/python3/source/`
 - Always commit and push using `git -C /Users/km/python3/source/tools` (or `cd` into it)
-- Remote: `https://github.com/kjmacgrub/tools.git` — branch: `master`
+- Remote: `https://github.com/kjmacgrub/2brain.git` — branch: `master`
 - Do NOT `git add tools/` from the outer `/source` repo
 
 ## Files
