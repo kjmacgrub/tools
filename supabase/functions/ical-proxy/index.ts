@@ -1,4 +1,7 @@
-const ICAL_URL = 'https://p39-caldav.icloud.com/published/2/OTE4MDI4ODg5MTgwMjg4OOCp0P2o51yKGRORXO0xc4HyjC3W4P9EV3FXSHNqIKWQBV_YFH16bccEUEs0TnhTnfqO1_fYkPCNWuSCSgqaOJc';
+const ICAL_URLS = [
+  'https://p39-caldav.icloud.com/published/2/OTE4MDI4ODg5MTgwMjg4OOCp0P2o51yKGRORXO0xc4HyjC3W4P9EV3FXSHNqIKWQBV_YFH16bccEUEs0TnhTnfqO1_fYkPCNWuSCSgqaOJc',
+  'https://p39-caldav.icloud.com/published/2/OTE4MDI4ODg5MTgwMjg4OOCp0P2o51yKGRORXO0xc4EE1NvuaNNxXLZ6yNRNsAUckvSs04SHBDah1_5nyRvqbpVWPrAc8Wn25RWZ-jq-zHI',
+];
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -75,10 +78,13 @@ Deno.serve(async (req) => {
   try {
     const month = new URL(req.url).searchParams.get('month'); // YYYY-MM, optional
 
-    const res = await fetch(ICAL_URL);
-    if (!res.ok) throw new Error(`iCal fetch failed: ${res.status}`);
+    const responses = await Promise.all(ICAL_URLS.map(url => fetch(url)));
+    for (const res of responses) {
+      if (!res.ok) throw new Error(`iCal fetch failed: ${res.status}`);
+    }
+    const texts = await Promise.all(responses.map(r => r.text()));
 
-    let events = parseIcal(await res.text());
+    let events = texts.flatMap(parseIcal);
 
     if (month) {
       const monthStart = month + '-01';
