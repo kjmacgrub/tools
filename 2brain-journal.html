@@ -417,6 +417,7 @@
   <div class="filter-row">
     <span class="filter-label">view</span>
     <span class="chip active" data-view="journal" onclick="setView('journal')">journal</span>
+    <span class="chip" data-view="chrono" onclick="setView('chrono')">chrono</span>
     <span class="chip" data-view="calendar" onclick="setView('calendar')">calendar</span>
   </div>
   <div class="filter-row" id="type-filters">
@@ -614,7 +615,7 @@
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
-  function renderEntry(t) {
+  function renderEntry(t, appLabel = null) {
     const meta = t.metadata || {};
     const type = meta.type || 'observation';
     const dateStr = new Date(t.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -625,10 +626,15 @@
       ...(meta.action_items || []).map(a => `<span class="meta-pill action">→ ${esc(a)}</span>`),
     ].join('');
 
+    const appBadge = appLabel
+      ? `<span class="type-badge" style="background:rgba(0,200,150,0.07);color:var(--accent);opacity:0.7">${esc(appLabel)}</span>`
+      : '';
+
     return `<div class="entry-item" data-id="${t.id}">
       <div class="entry-row" onclick="toggleEntry('${t.id}')">
         <span class="entry-date">${dateStr}</span>
         <span class="type-badge badge-${type}">${type === 'person_note' ? 'person' : type}</span>
+        ${appBadge}
         <span class="entry-preview">${esc(previewText(t.content))}</span>
       </div>
       <div class="entry-detail">
@@ -785,12 +791,30 @@
 
   // ── Render ────────────────────────────────────────────────────────────────
 
+  function renderChronological() {
+    const feed = document.getElementById('feed');
+    if (filtered.length === 0) {
+      feed.innerHTML = '<div class="empty">no thoughts found</div>';
+      return;
+    }
+    feed.innerHTML = `<div class="sections"><div class="section">
+      <div class="section-body" style="border-top:none">
+        ${filtered.map(t => renderEntry(t, detectApp(t))).join('')}
+      </div>
+    </div></div>`;
+  }
+
   function renderFeed() {
     const stats = document.getElementById('stats');
     stats.textContent = `${filtered.length} thought${filtered.length !== 1 ? 's' : ''} · ${allThoughts.length} total`;
 
     if (viewMode === 'calendar') {
       renderCalendar();
+      return;
+    }
+
+    if (viewMode === 'chrono') {
+      renderChronological();
       return;
     }
 
