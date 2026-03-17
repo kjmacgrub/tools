@@ -13,6 +13,7 @@
     --bg: #0e0e0e;
     --surface: #161616;
     --surface2: #1e1e1e;
+    --surface-hover: #1b1b1b;
     --border: #2a2a2a;
     --accent: #00c896;
     --accent-dim: rgba(0,200,150,0.06);
@@ -26,6 +27,18 @@
     --type-person_note: #ec4899;
     --type-summary: #06b6d4;
     --today: #f97316;
+  }
+
+  html.light {
+    --bg: #f7f7f5;
+    --surface: #ffffff;
+    --surface2: #efefed;
+    --surface-hover: #e8e8e6;
+    --border: #dededc;
+    --accent-dim: rgba(0,160,110,0.07);
+    --text: #1a1a1a;
+    --text-dim: #999;
+    --text-mid: #555;
   }
 
   body {
@@ -135,7 +148,7 @@
     user-select: none;
     transition: background 0.1s;
   }
-  .section-header:hover { background: #232323; }
+  .section-header:hover { background: var(--surface-hover); }
 
   .section-toggle { font-size: 10px; color: var(--text-dim); flex-shrink: 0; width: 10px; }
 
@@ -169,7 +182,7 @@
     cursor: pointer;
     transition: background 0.1s;
   }
-  .entry-row:hover { background: #1b1b1b; }
+  .entry-row:hover { background: var(--surface-hover); }
   .entry-row.open { background: var(--accent-dim); border-left: 2px solid var(--accent); padding-left: 12px; }
 
   .entry-date {
@@ -441,6 +454,7 @@
     <span class="chip active" id="journal-chrono-btn" onclick="toggleJournalChrono()">project/chrono</span>
     <span class="chip" data-view="calendar" onclick="setView('calendar')">calendar</span>
     <span id="collapse-all-btn" class="chip" onclick="toggleCollapseAll()" style="margin-left:8px">collapse all</span>
+    <span id="theme-btn" class="chip" onclick="toggleTheme()" style="margin-left:auto">light</span>
   </div>
   <div class="filter-row" id="type-filters">
     <span class="filter-label">type</span>
@@ -959,12 +973,25 @@
     't': 'task',
   };
 
+  function toggleTheme() {
+    const isLight = document.documentElement.classList.toggle('light');
+    document.getElementById('theme-btn').textContent = isLight ? 'dark' : 'light';
+    localStorage.setItem('2brain-theme', isLight ? 'light' : 'dark');
+  }
+
+  // Apply saved theme on load
+  if (localStorage.getItem('2brain-theme') === 'light') {
+    document.documentElement.classList.add('light');
+    document.getElementById('theme-btn').textContent = 'dark';
+  }
+
   document.addEventListener('keydown', e => {
     if (document.activeElement === document.getElementById('search')) return;
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     if (e.key === 'v') { toggleJournalChrono(); return; }
     if (e.key === 'c') { setView('calendar'); return; }
     if (e.key === 'x') { toggleCollapseAll(); return; }
+    if (e.key === 'l') { toggleTheme(); return; }
     const type = KEY_MAP[e.key];
     if (type) setType(type);
   });
