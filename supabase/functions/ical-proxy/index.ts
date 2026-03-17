@@ -78,11 +78,12 @@ Deno.serve(async (req) => {
   try {
     const month = new URL(req.url).searchParams.get('month'); // YYYY-MM, optional
 
-    const responses = await Promise.all(ICAL_URLS.map(url => fetch(url)));
-    for (const res of responses) {
-      if (!res.ok) throw new Error(`iCal fetch failed: ${res.status}`);
-    }
-    const texts = await Promise.all(responses.map(r => r.text()));
+    const texts = await Promise.all(ICAL_URLS.map(async url => {
+      try {
+        const res = await fetch(url);
+        return res.ok ? await res.text() : '';
+      } catch { return ''; }
+    }));
 
     let events = texts.flatMap(parseIcal);
 
