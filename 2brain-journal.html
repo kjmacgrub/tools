@@ -419,6 +419,7 @@
     <span class="chip active" data-view="journal" onclick="setView('journal')">journal</span>
     <span class="chip" data-view="chrono" onclick="setView('chrono')">chrono</span>
     <span class="chip" data-view="calendar" onclick="setView('calendar')">calendar</span>
+    <span id="collapse-all-btn" class="chip" onclick="toggleCollapseAll()" style="margin-left:8px">collapse all</span>
   </div>
   <div class="filter-row" id="type-filters">
     <span class="filter-label">type</span>
@@ -531,12 +532,30 @@
     return groups;
   }
 
+  function updateCollapseAllBtn() {
+    const btn = document.getElementById('collapse-all-btn');
+    if (!btn) return;
+    btn.style.display = viewMode === 'journal' ? '' : 'none';
+    btn.textContent = openSections.size === 0 ? 'expand all' : 'collapse all';
+  }
+
+  function toggleCollapseAll() {
+    if (openSections.size === 0) {
+      openSections = new Set(APP_ORDER);
+    } else {
+      openSections = new Set();
+    }
+    updateCollapseAllBtn();
+    renderFeed();
+  }
+
   function setView(mode) {
     viewMode = mode;
     document.querySelectorAll('.chip[data-view]').forEach(c => {
       c.classList.toggle('active', c.dataset.view === mode);
     });
     if (mode === 'calendar') fetchCalEvents();
+    updateCollapseAllBtn();
     renderFeed();
   }
 
@@ -581,6 +600,7 @@
       body.style.display = '';
       toggle.textContent = '▾';
     }
+    updateCollapseAllBtn();
   }
 
   function toggleEntry(id) {
@@ -864,6 +884,8 @@
     const type = KEY_MAP[e.key];
     if (type) setType(type);
   });
+
+  updateCollapseAllBtn();
 
   fetchThoughts()
     .then(data => {
