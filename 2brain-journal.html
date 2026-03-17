@@ -806,6 +806,11 @@
     calMonth += delta;
     if (calMonth < 0)  { calMonth = 11; calYear--; }
     if (calMonth > 11) { calMonth = 0;  calYear++; }
+    const todayYM = `${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}`;
+    const newYM   = `${calYear}-${String(calMonth+1).padStart(2,'0')}`;
+    if (newYM > todayYM) {
+      selectedDate = `${newYM}-15`;
+    }
     fetchCalEvents();
     renderFeed();
   }
@@ -985,9 +990,31 @@
     document.getElementById('theme-btn').textContent = 'dark';
   }
 
+  function navigateDate(deltaDays) {
+    const base = selectedDate || new Date().toISOString().substring(0, 10);
+    const d = new Date(base + 'T12:00:00');
+    d.setDate(d.getDate() + deltaDays);
+    selectedDate = d.toISOString().substring(0, 10);
+    const newYear = d.getFullYear(), newMonth = d.getMonth();
+    if (newYear !== calYear || newMonth !== calMonth) {
+      calYear = newYear;
+      calMonth = newMonth;
+      fetchCalEvents();
+    }
+    renderFeed();
+  }
+
   document.addEventListener('keydown', e => {
     if (document.activeElement === document.getElementById('search')) return;
     if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (viewMode === 'calendar' && ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) {
+      e.preventDefault();
+      if (e.key === 'ArrowLeft')  navigateDate(-1);
+      if (e.key === 'ArrowRight') navigateDate(1);
+      if (e.key === 'ArrowUp')    navigateDate(-7);
+      if (e.key === 'ArrowDown')  navigateDate(7);
+      return;
+    }
     if (e.key === 'v') { toggleJournalChrono(); return; }
     if (e.key === 'c') { setView('calendar'); return; }
     if (e.key === 'x') { toggleCollapseAll(); return; }
