@@ -438,8 +438,7 @@
   </div>
   <div class="filter-row">
     <span class="filter-label">view</span>
-    <span class="chip active" data-view="journal" onclick="setView('journal')">journal</span>
-    <span class="chip" data-view="chrono" onclick="setView('chrono')">chrono</span>
+    <span class="chip active" id="journal-chrono-btn" onclick="toggleJournalChrono()">project/chrono</span>
     <span class="chip" data-view="calendar" onclick="setView('calendar')">calendar</span>
     <span id="collapse-all-btn" class="chip" onclick="toggleCollapseAll()" style="margin-left:8px">collapse all</span>
   </div>
@@ -572,11 +571,14 @@
     renderFeed();
   }
 
+  function toggleJournalChrono() {
+    setView(viewMode === 'journal' ? 'chrono' : 'journal');
+  }
+
   function setView(mode) {
     viewMode = mode;
-    document.querySelectorAll('.chip[data-view]').forEach(c => {
-      c.classList.toggle('active', c.dataset.view === mode);
-    });
+    document.getElementById('journal-chrono-btn').classList.toggle('active', mode === 'journal' || mode === 'chrono');
+    document.querySelector('.chip[data-view="calendar"]').classList.toggle('active', mode === 'calendar');
     if (mode === 'calendar') fetchCalEvents();
     updateCollapseAllBtn();
     renderFeed();
