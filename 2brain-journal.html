@@ -962,6 +962,9 @@
   document.addEventListener('keydown', e => {
     if (document.activeElement === document.getElementById('search')) return;
     if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === 'v') { toggleJournalChrono(); return; }
+    if (e.key === 'c') { setView('calendar'); return; }
+    if (e.key === 'x') { toggleCollapseAll(); return; }
     const type = KEY_MAP[e.key];
     if (type) setType(type);
   });
