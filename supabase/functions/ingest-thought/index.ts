@@ -31,7 +31,7 @@ async function extractMetadata(text: string): Promise<Record<string, unknown>> {
 - "people": array of people mentioned (empty if none)
 - "action_items": array of implied to-dos (empty if none)
 - "dates_mentioned": array of dates YYYY-MM-DD (empty if none)
-- "topics": array of 1-3 short topic tags (always at least one)
+- "topics": array of 1-3 short topic tags (always at least one). If the content relates to a known project, use its canonical tag as the FIRST topic: produce-processor, sbs, delivery, cef, budget, 2brain
 - "type": one of "observation", "task", "idea", "reference", "person_note", "meeting", "summary"
 Only extract what's explicitly there.` },
         { role: "user", content: text },

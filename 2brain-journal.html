@@ -505,6 +505,11 @@
       topics: ['knowledge management', 'second brain', 'open brain', 'memory system'],
       content: ['2brain', 'open brain', 'ingest-thought', 'brain-mcp', 'brain journal'],
     },
+    {
+      app: 'Produce',
+      topics: ['produce-processor', 'produce processor', 'produce processing'],
+      content: ['produce processor', 'produce-processor'],
+    },
   ];
 
   let allThoughts = [];
@@ -559,14 +564,31 @@
       if (rule.topics.some(k => topics.includes(k))) return rule.app;
       if (rule.content.some(k => content.includes(k))) return rule.app;
     }
+    // Fall back to first topic tag, title-cased
+    const firstTopic = (meta.topics || [])[0];
+    if (firstTopic && firstTopic !== 'uncategorized') {
+      return firstTopic.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    }
     return 'General';
   }
 
   function groupByApp(thoughts) {
     const groups = {};
     APP_ORDER.forEach(a => groups[a] = []);
-    for (const t of thoughts) groups[detectApp(t)].push(t);
+    for (const t of thoughts) {
+      const app = detectApp(t);
+      if (!groups[app]) groups[app] = [];
+      groups[app].push(t);
+    }
     return groups;
+  }
+
+  function getAppOrder(groups) {
+    const known = APP_ORDER.filter(a => groups[a] && groups[a].length);
+    const extra = Object.keys(groups)
+      .filter(a => !APP_ORDER.includes(a) && groups[a].length)
+      .sort();
+    return [...known, ...extra];
   }
 
   function updateCollapseAllBtn() {
@@ -580,7 +602,7 @@
 
   function toggleCollapseAll() {
     if (openSections.size === 0) {
-      openSections = new Set(APP_ORDER);
+      openSections = new Set(getAppOrder(groupByApp(filtered)));
     } else {
       openSections = new Set();
     }
@@ -950,7 +972,7 @@
 
     const groups = groupByApp(filtered);
     const parts = [];
-    for (const app of APP_ORDER) {
+    for (const app of getAppOrder(groups)) {
       const thoughts = groups[app];
       if (!thoughts.length) continue;
       const isOpen = openSections.has(app);
