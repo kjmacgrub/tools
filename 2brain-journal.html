@@ -151,6 +151,8 @@
   .section-header:hover { background: var(--surface-hover); }
 
   .section-toggle { font-size: 10px; color: var(--text-dim); flex-shrink: 0; width: 10px; }
+  .section-topic-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-left: 6px; }
+  .section-topic-tag { font-size: 9px; font-family: 'IBM Plex Mono', monospace; color: var(--text-dim); background: rgba(128,128,128,0.12); border-radius: 3px; padding: 1px 5px; letter-spacing: 0; text-transform: none; }
 
   .section-name {
     font-family: 'IBM Plex Mono', monospace;
@@ -543,39 +545,44 @@
   const SUPABASE_URL = 'https://wiabftxfumvzbttqgmtq.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_y0N-mQ5ayjlQPAHqiVisGQ_dDwDB380';
 
-  const APP_ORDER = ['Delivery', 'SBS', 'CEF', 'Budget', '2Brain', 'General'];
+  const APP_ORDER = ['Delivery', 'SBS', 'CEF', 'Budget', '2Brain', 'Vehicle', 'General'];
 
   const APP_RULES = [
-    {
-      app: 'Delivery',
-      topics: ['delivery', 'cloud run', 'firebase', 'firestore'],
-      content: ['delivery app', 'cloud run', 'nuclear wipe', 'import screen', 'high count', 'high-count', 'scan_downloads'],
-    },
-    {
-      app: 'SBS',
-      topics: ['sbs', 'inventory management', 'retail operations', 'backstock', 'back-stock'],
-      content: ['sbs', 'back-stock', 'backstock', 'pull log', 'shelf capacity', 'store back', '/sbs/'],
-    },
-    {
-      app: 'CEF',
-      topics: ['cef', 'investment', 'portfolio', 'nav', 'closed-end', 'distribution'],
-      content: ['cef', 'closed-end', 'cef portfolio', 'nav sparkline', 'nav history', 'cef.db', '/cef/'],
-    },
-    {
-      app: 'Budget',
-      topics: ['budget', 'cash flow', 'quicken', 'sage', 'tax'],
-      content: ['budget planner', 'cash flow', 'quicken', 'budget api', 'budget/api', 'sage green'],
-    },
-    {
-      app: '2Brain',
-      topics: ['knowledge management', 'second brain', 'open brain', 'memory system'],
-      content: ['2brain', 'open brain', 'ingest-thought', 'brain-mcp', 'brain journal'],
-    },
-    {
-      app: 'Produce',
-      topics: ['produce-processor', 'produce processor', 'produce processing'],
-      content: ['produce processor', 'produce-processor'],
-    },
+  {
+    app: 'Delivery',
+    topics: ['delivery', 'cloud run', 'firebase', 'firestore'],
+    content: ['delivery app', 'cloud run', 'nuclear wipe', 'import screen', 'high count', 'high-count', 'scan_downloads'],
+  },
+  {
+    app: 'SBS',
+    topics: ['sbs', 'inventory management', 'retail operations', 'backstock', 'back-stock'],
+    content: ['sbs', 'back-stock', 'backstock', 'pull log', 'shelf capacity', 'store back', '/sbs/'],
+  },
+  {
+    app: 'CEF',
+    topics: ['cef', 'investment', 'portfolio', 'nav', 'closed-end', 'distribution'],
+    content: ['cef', 'closed-end', 'cef portfolio', 'nav sparkline', 'nav history', 'cef.db', '/cef/'],
+  },
+  {
+    app: 'Budget',
+    topics: ['budget', 'cash flow', 'quicken', 'sage', 'tax'],
+    content: ['budget planner', 'cash flow', 'quicken', 'budget api', 'budget/api', 'sage green'],
+  },
+  {
+    app: '2Brain',
+    topics: ['knowledge management', 'second brain', 'open brain', 'memory system'],
+    content: ['2brain', 'open brain', 'ingest-thought', 'brain-mcp', 'brain journal'],
+  },
+  {
+    app: 'Produce',
+    topics: ['produce-processor', 'produce processor', 'produce processing'],
+    content: ['produce processor', 'produce-processor'],
+  },
+  {
+    app: 'Vehicle',
+    topics: ['vehicle lease', 'decision timeline', 'financial details', 'vehicle lease comparison', 'retirement planning', 'automotive analysis', 'vehicle research', 'leasing'],
+    content: [],
+  },
   ];
 
   let allThoughts = [];
@@ -1153,11 +1160,20 @@
       const thoughts = groups[app];
       if (!thoughts.length) continue;
       const isOpen = openSections.has(app);
+      const isStray = !APP_ORDER.includes(app);
+      let topicTagsHtml = '';
+      if (isStray) {
+        const rawTopics = [...new Set(thoughts.flatMap(t => (t.metadata?.topics || [])))];
+        topicTagsHtml = rawTopics.length
+          ? `<span class="section-topic-tags">${rawTopics.map(tp => `<span class="section-topic-tag">${esc(tp)}</span>`).join('')}</span>`
+          : '';
+      }
       parts.push(`
         <div class="section" data-section="${app}">
           <div class="section-header" onclick="toggleSection('${app}')">
             <span class="section-toggle">${isOpen ? '▾' : '▸'}</span>
             <span class="section-name">${app}</span>
+            ${topicTagsHtml}
             <span class="section-count">${thoughts.length}</span>
           </div>
           <div class="section-body"${isOpen ? '' : ' style="display:none"'}>

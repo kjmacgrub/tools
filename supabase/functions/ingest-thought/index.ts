@@ -54,6 +54,24 @@ async function replyInSlack(channel: string, threadTs: string, text: string): Pr
 Deno.serve(async (req: Request): Promise<Response> => {
   try {
     const body = await req.json();
+
+    // Direct API call path (non-Slack): body has { content, metadata }
+    if (body.content) {
+      const { error } = await supabase.from("thoughts").insert({
+        content: body.content,
+        metadata: body.metadata || {},
+      });
+      if (error) {
+        console.error("Supabase insert error:", error);
+        return new Response(JSON.stringify({ ok: false, error: error.message }), {
+          status: 500, headers: { "Content-Type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify({ ok: true }), {
+        status: 200, headers: { "Content-Type": "application/json" },
+      });
+    }
+
     if (body.type === "url_verification") {
       return new Response(JSON.stringify({ challenge: body.challenge }), {
         headers: { "Content-Type": "application/json" },

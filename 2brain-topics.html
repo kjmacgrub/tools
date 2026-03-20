@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2Brain — Topic Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f0f;
+      --surface: #1a1a1a;
+      --surface-hover: #222;
+      --border: #2a2a2a;
+      --text: #e0e0e0;
+      --text-dim: #666;
+      --accent: #00c896;
+      --accent-dim: rgba(0,200,150,0.12);
+      --warn: #e8a020;
+      --warn-dim: rgba(232,160,32,0.12);
+      --danger: #e05050;
+    }
+
+    html.light {
+      --bg: #f7f7f5;
+      --surface: #ffffff;
+      --surface-hover: #e8e8e6;
+      --border: #dededc;
+      --text: #1a1a1a;
+      --text-dim: #999;
+      --accent: #00a06e;
+      --accent-dim: rgba(0,160,110,0.07);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 13px;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    h1 {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--accent);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      color: var(--text-dim);
+      font-size: 12px;
+      margin-bottom: 24px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 20px;
+      align-items: start;
+    }
+
+    /* ── Section: stray topics ── */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .topic-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .topic-row:last-child { border-bottom: none; }
+    .topic-row:hover { background: var(--surface-hover); }
+    .topic-row.selected { background: var(--accent-dim); }
+
+    .topic-row input[type=checkbox] {
+      margin-top: 2px;
+      flex-shrink: 0;
+      accent-color: var(--accent);
+    }
+
+    .topic-row-body { flex: 1; min-width: 0; }
+
+    .topic-name {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .topic-count {
+      font-size: 10px;
+      color: var(--text-dim);
+      margin-left: 6px;
+    }
+
+    .co-topics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 5px;
+    }
+
+    .co-pill {
+      font-size: 10px;
+      font-family: 'IBM Plex Mono', monospace;
+      color: var(--text-dim);
+      background: rgba(128,128,128,0.1);
+      border-radius: 3px;
+      padding: 1px 6px;
+    }
+
+    .known-badge {
+      font-size: 9px;
+      font-family: 'IBM Plex Mono', monospace;
+      color: var(--accent);
+      background: var(--accent-dim);
+      border-radius: 3px;
+      padding: 1px 6px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    /* ── Right panel: grouping ── */
+    .sidebar { display: flex; flex-direction: column; gap: 16px; }
+
+    .group-form {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 14px;
+    }
+
+    .form-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .form-input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      padding: 7px 10px;
+      outline: none;
+      margin-bottom: 12px;
+    }
+    .form-input:focus { border-color: var(--accent); }
+
+    .selected-topics-list {
+      min-height: 36px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 6px 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+
+    .selected-pill {
+      font-size: 10px;
+      font-family: 'IBM Plex Mono', monospace;
+      color: var(--accent);
+      background: var(--accent-dim);
+      border-radius: 3px;
+      padding: 2px 7px;
+    }
+
+    .empty-hint {
+      font-size: 11px;
+      color: var(--text-dim);
+      font-style: italic;
+    }
+
+    .btn {
+      display: inline-block;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+      padding: 7px 14px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.1s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn:disabled { opacity: 0.35; cursor: default; }
+
+    .btn-primary { background: var(--accent); color: #000; font-weight: 500; }
+    .btn-ghost { background: transparent; color: var(--text-dim); border: 1px solid var(--border); }
+
+    .btn-row { display: flex; gap: 8px; }
+
+    /* ── Rules list ── */
+    .rules-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .rule-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 10px 12px;
+    }
+
+    .rule-item-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+
+    .rule-app-name {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .rule-remove {
+      font-size: 11px;
+      color: var(--danger);
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: 'IBM Plex Mono', monospace;
+      opacity: 0.6;
+    }
+    .rule-remove:hover { opacity: 1; }
+
+    .rule-topics-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    /* ── Output ── */
+    .output-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .output-header {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .output-header span {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+
+    .copy-btn {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      color: var(--accent);
+      background: none;
+      border: none;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+    }
+    .copy-btn:hover { opacity: 0.7; }
+
+    pre {
+      padding: 14px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      line-height: 1.6;
+      color: #aaa;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .status {
+      font-size: 11px;
+      color: var(--text-dim);
+      padding: 8px 14px;
+      font-style: italic;
+    }
+
+    .loading { text-align: center; padding: 40px; color: var(--text-dim); font-family: 'IBM Plex Mono', monospace; font-size: 12px; }
+  </style>
+</head>
+<body>
+
+<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px">
+  <h1>Topic Manager</h1>
+  <button id="theme-btn" onclick="toggleTheme()" style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;background:none;border:1px solid var(--border);color:var(--text-dim);border-radius:4px;padding:3px 10px;cursor:pointer">light</button>
+</div>
+<p class="subtitle">Group stray topic headings into named APP_RULES buckets</p>
+
+<div id="loading" class="loading">Loading thoughts…</div>
+
+<div id="app" class="layout" style="display:none">
+
+  <!-- Left: topic list -->
+  <div>
+    <div class="panel" id="topic-panel">
+      <div class="panel-header">
+        <span>Stray topics <span id="stray-count" style="color:var(--text)"></span></span>
+        <span style="display:flex;gap:6px">
+          <button id="sort-count-btn" onclick="setSort('count')" style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.5px;padding:2px 7px;border-radius:3px;border:1px solid var(--border);cursor:pointer;background:var(--accent);color:#000">count</button>
+          <button id="sort-alpha-btn" onclick="setSort('alpha')" style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.5px;padding:2px 7px;border-radius:3px;border:1px solid var(--border);cursor:pointer;background:none;color:var(--text-dim)">a–z</button>
+        </span>
+      </div>
+      <div id="topic-list"></div>
+    </div>
+  </div>
+
+  <!-- Right: grouping tools + output -->
+  <div class="sidebar">
+
+    <!-- Group form -->
+    <div class="group-form">
+      <label class="form-label">New bucket name</label>
+      <input class="form-input" id="bucket-name" type="text" placeholder="e.g. Vehicle" />
+
+      <label class="form-label">Selected topics</label>
+      <div class="selected-topics-list" id="selected-display">
+        <span class="empty-hint">Select topics from the list</span>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" id="add-rule-btn" onclick="addRule()" disabled>Add rule</button>
+        <button class="btn btn-ghost" onclick="clearSelection()">Clear</button>
+      </div>
+    </div>
+
+    <!-- Pending rules -->
+    <div id="rules-section" style="display:none">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px">
+        Pending rules
+      </div>
+      <div class="rules-list" id="rules-list"></div>
+    </div>
+
+    <!-- Apply -->
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button class="btn btn-primary" id="apply-btn" onclick="applyToJournal()" style="width:100%" disabled>
+        Apply to 2brain-journal.html →
+      </button>
+      <div class="status" id="apply-status"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://wiabftxfumvzbttqgmtq.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_y0N-mQ5ayjlQPAHqiVisGQ_dDwDB380';
+
+  const APP_ORDER = ['Delivery', 'SBS', 'CEF', 'Budget', '2Brain', 'General'];
+
+  const APP_RULES = [
+    {
+      app: 'Delivery',
+      topics: ['delivery', 'cloud run', 'firebase', 'firestore'],
+      content: ['delivery app', 'cloud run', 'nuclear wipe', 'import screen', 'high count', 'high-count', 'scan_downloads'],
+    },
+    {
+      app: 'SBS',
+      topics: ['sbs', 'inventory management', 'retail operations', 'backstock', 'back-stock'],
+      content: ['sbs', 'back-stock', 'backstock', 'pull log', 'shelf capacity', 'store back', '/sbs/'],
+    },
+    {
+      app: 'CEF',
+      topics: ['cef', 'investment', 'portfolio', 'nav', 'closed-end', 'distribution'],
+      content: ['cef', 'closed-end', 'cef portfolio', 'nav sparkline', 'nav history', 'cef.db', '/cef/'],
+    },
+    {
+      app: 'Budget',
+      topics: ['budget', 'cash flow', 'quicken', 'sage', 'tax'],
+      content: ['budget planner', 'cash flow', 'quicken', 'budget api', 'budget/api', 'sage green'],
+    },
+    {
+      app: '2Brain',
+      topics: ['knowledge management', 'second brain', 'open brain', 'memory system'],
+      content: ['2brain', 'open brain', 'ingest-thought', 'brain-mcp', 'brain journal'],
+    },
+    {
+      app: 'Produce',
+      topics: ['produce-processor', 'produce processor', 'produce processing'],
+      content: ['produce processor', 'produce-processor'],
+    },
+  ];
+
+  function detectApp(t) {
+    const meta = t.metadata || {};
+    const topics = (meta.topics || []).join(' ').toLowerCase();
+    const content = t.content.toLowerCase().substring(0, 400);
+    for (const rule of APP_RULES) {
+      if (rule.topics.some(k => topics.includes(k))) return rule.app;
+      if (rule.content.some(k => content.includes(k))) return rule.app;
+    }
+    const firstTopic = (meta.topics || [])[0];
+    if (firstTopic && firstTopic !== 'uncategorized') {
+      return firstTopic.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    }
+    return 'General';
+  }
+
+  // State
+  let strayTopics = [];   // [{name, count, coTopics: Set, entries}]
+  let selected = new Set();
+  let pendingRules = [];  // [{app, topics: []}]
+  let sortMode = 'count'; // 'count' | 'alpha'
+
+  async function init() {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/thoughts?select=id,content,metadata,created_at&order=created_at.desc&limit=1000`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+    );
+    const thoughts = await res.json();
+
+    // Group by detected app
+    const groups = {};
+    for (const t of thoughts) {
+      const app = detectApp(t);
+      if (!groups[app]) groups[app] = [];
+      groups[app].push(t);
+    }
+
+    // Stray = not in APP_ORDER (and not General)
+    strayTopics = Object.entries(groups)
+      .filter(([app]) => !APP_ORDER.includes(app))
+      .map(([app, entries]) => {
+        const coTopics = new Set();
+        for (const t of entries) {
+          for (const tp of (t.metadata?.topics || [])) {
+            coTopics.add(tp);
+          }
+        }
+        return { name: app, count: entries.length, coTopics };
+      })
+      .sort((a, b) => b.count - a.count);
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('app').style.display = 'grid';
+    document.getElementById('stray-count').textContent = `(${strayTopics.length})`;
+    renderTopicList();
+  }
+
+  function setSort(mode) {
+    sortMode = mode;
+    document.getElementById('sort-count-btn').style.background = mode === 'count' ? 'var(--accent)' : 'none';
+    document.getElementById('sort-count-btn').style.color = mode === 'count' ? '#000' : 'var(--text-dim)';
+    document.getElementById('sort-alpha-btn').style.background = mode === 'alpha' ? 'var(--accent)' : 'none';
+    document.getElementById('sort-alpha-btn').style.color = mode === 'alpha' ? '#000' : 'var(--text-dim)';
+    renderTopicList();
+  }
+
+  function renderTopicList() {
+    const el = document.getElementById('topic-list');
+    const sorted = [...strayTopics].sort(sortMode === 'alpha'
+      ? (a, b) => a.name.localeCompare(b.name)
+      : (a, b) => b.count - a.count);
+    if (!strayTopics.length) {
+      el.innerHTML = '<div style="padding:20px;color:var(--text-dim);font-style:italic;text-align:center">No stray topics — everything is matched by APP_RULES</div>';
+      return;
+    }
+    el.innerHTML = sorted.map(t => {
+      const isSelected = selected.has(t.name);
+      const coArr = [...t.coTopics].filter(tp => {
+        const normalized = tp.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        return normalized !== t.name;
+      });
+      return `
+        <div class="topic-row${isSelected ? ' selected' : ''}" onclick="toggleSelect('${esc(t.name)}')">
+          <input type="checkbox" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation();toggleSelect('${esc(t.name)}')">
+          <div class="topic-row-body">
+            <span class="topic-name">${esc(t.name)}</span>
+            <span class="topic-count">${t.count} entr${t.count === 1 ? 'y' : 'ies'}</span>
+            ${coArr.length ? `
+              <div class="co-topics">
+                ${coArr.map(tp => `<span class="co-pill">${esc(tp)}</span>`).join('')}
+              </div>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function toggleSelect(name) {
+    if (selected.has(name)) selected.delete(name);
+    else selected.add(name);
+    renderTopicList();
+    renderSelectedDisplay();
+  }
+
+  function renderSelectedDisplay() {
+    const el = document.getElementById('selected-display');
+    const btn = document.getElementById('add-rule-btn');
+    if (!selected.size) {
+      el.innerHTML = '<span class="empty-hint">Select topics from the list</span>';
+      btn.disabled = true;
+      return;
+    }
+    el.innerHTML = [...selected].map(s => `<span class="selected-pill">${esc(s)}</span>`).join('');
+    btn.disabled = false;
+  }
+
+  function clearSelection() {
+    selected.clear();
+    renderTopicList();
+    renderSelectedDisplay();
+  }
+
+  function addRule() {
+    const name = document.getElementById('bucket-name').value.trim();
+    if (!name) { document.getElementById('bucket-name').focus(); return; }
+    if (!selected.size) return;
+
+    // Collect the raw topic strings that map to each selected section name
+    const rawTopics = new Set();
+    for (const sectionName of selected) {
+      const stray = strayTopics.find(s => s.name === sectionName);
+      if (stray) {
+        for (const tp of stray.coTopics) rawTopics.add(tp);
+      }
+    }
+
+    pendingRules.push({ app: name, topics: [...rawTopics] });
+
+    // Remove selected from stray list
+    strayTopics = strayTopics.filter(t => !selected.has(t.name));
+    selected.clear();
+    document.getElementById('bucket-name').value = '';
+
+    renderTopicList();
+    renderSelectedDisplay();
+    renderRules();
+    document.getElementById('stray-count').textContent = `(${strayTopics.length})`;
+    document.getElementById('apply-btn').disabled = pendingRules.length === 0;
+  }
+
+  function removeRule(idx) {
+    pendingRules.splice(idx, 1);
+    renderRules();
+    document.getElementById('apply-btn').disabled = pendingRules.length === 0;
+  }
+
+  function renderRules() {
+    const section = document.getElementById('rules-section');
+    const list = document.getElementById('rules-list');
+    if (!pendingRules.length) { section.style.display = 'none'; return; }
+    section.style.display = 'block';
+    list.innerHTML = pendingRules.map((r, i) => `
+      <div class="rule-item">
+        <div class="rule-item-header">
+          <span class="rule-app-name">${esc(r.app)}</span>
+          <button class="rule-remove" onclick="removeRule(${i})">remove</button>
+        </div>
+        <div class="rule-topics-list">
+          ${r.topics.map(tp => `<span class="co-pill" style="color:var(--accent);background:var(--accent-dim)">${esc(tp)}</span>`).join('')}
+        </div>
+      </div>`).join('');
+  }
+
+  function buildReplacements() {
+    const newAppOrder = [
+      ...APP_ORDER.filter(a => a !== 'General'),
+      ...pendingRules.map(r => r.app),
+      'General'
+    ];
+
+    const newRules = [
+      ...APP_RULES,
+      ...pendingRules.map(r => ({ app: r.app, topics: r.topics, content: [] }))
+    ];
+
+    const rulesCode = newRules.map(r => {
+      const topicsStr = r.topics.map(t => `'${t}'`).join(', ');
+      const contentStr = r.content.map(t => `'${t}'`).join(', ');
+      return `  {\n    app: '${r.app}',\n    topics: [${topicsStr}],\n    content: [${contentStr}],\n  }`;
+    }).join(',\n');
+
+    const orderStr = newAppOrder.map(a => `'${a}'`).join(', ');
+
+    return {
+      orderLine: `const APP_ORDER = [${orderStr}];`,
+      rulesBlock: `const APP_RULES = [\n${rulesCode},\n  ];`
+    };
+  }
+
+  // ── IndexedDB handle persistence ──────────────────────────────────────
+  function openIDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open('2brain-topics', 1);
+      req.onupgradeneeded = () => req.result.createObjectStore('handles');
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async function saveHandle(handle) {
+    const db = await openIDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('handles', 'readwrite');
+      tx.objectStore('handles').put(handle, 'journal');
+      tx.oncomplete = resolve;
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  async function loadHandle() {
+    const db = await openIDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('handles', 'readonly');
+      const req = tx.objectStore('handles').get('journal');
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async function writeToHandle(fileHandle, status) {
+    const file = await fileHandle.getFile();
+    let text = await file.text();
+
+    const { orderLine, rulesBlock } = buildReplacements();
+    text = text.replace(/const APP_ORDER = \[.*?\];/, orderLine);
+    text = text.replace(/const APP_RULES = \[[\s\S]*?\n  \];/, rulesBlock);
+
+    const writable = await fileHandle.createWritable();
+    await writable.write(text);
+    await writable.close();
+
+    status.style.color = 'var(--accent)';
+    status.textContent = 'Saved. Reload 2brain-journal.html to see changes.';
+  }
+
+  // ── Main apply action ──────────────────────────────────────────────────
+  async function applyToJournal() {
+    if (!pendingRules.length) return;
+    const status = document.getElementById('apply-status');
+    status.textContent = '';
+
+    try {
+      // Try stored handle first
+      let fileHandle = await loadHandle();
+
+      if (fileHandle) {
+        const perm = await fileHandle.queryPermission({ mode: 'readwrite' });
+        if (perm === 'granted') {
+          await writeToHandle(fileHandle, status);
+          return;
+        }
+        // Permission lapsed — re-request
+        const req = await fileHandle.requestPermission({ mode: 'readwrite' });
+        if (req === 'granted') {
+          await writeToHandle(fileHandle, status);
+          return;
+        }
+      }
+
+      // No stored handle or permission denied — open picker
+      const [picked] = await window.showOpenFilePicker({
+        types: [{ description: 'HTML', accept: { 'text/html': ['.html'] } }],
+      });
+
+      await saveHandle(picked);
+      await writeToHandle(picked, status);
+
+    } catch (err) {
+      if (err.name === 'AbortError') return;
+      status.style.color = 'var(--danger)';
+      status.textContent = `Error: ${err.message}`;
+    }
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&#39;');
+  }
+
+  function toggleTheme() {
+    const isLight = document.documentElement.classList.toggle('light');
+    document.getElementById('theme-btn').textContent = isLight ? 'dark' : 'light';
+    localStorage.setItem('2brain-theme', isLight ? 'light' : 'dark');
+  }
+
+  if (localStorage.getItem('2brain-theme') === 'light') {
+    document.documentElement.classList.add('light');
+    document.getElementById('theme-btn').textContent = 'dark';
+  }
+
+  init();
+</script>
+</body>
+</html>
