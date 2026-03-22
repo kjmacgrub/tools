@@ -9,6 +9,16 @@ const SLACK_CAPTURE_CHANNEL = Deno.env.get("SLACK_CAPTURE_CHANNEL")!;
 const OPENROUTER_BASE = "https://openrouter.ai/api/v1";
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+async function getActiveProjectTags(): Promise<string> {
+  const { data } = await supabase
+    .from("projects")
+    .select("tag")
+    .eq("active", true)
+    .order("tag");
+  if (!data || data.length === 0) return "";
+  return data.map((p: { tag: string }) => p.tag).join(", ");
+}
+
 async function getEmbedding(text: string): Promise<number[]> {
   const r = await fetch(`${OPENROUTER_BASE}/embeddings`, {
     method: "POST",
@@ -19,7 +29,11 @@ async function getEmbedding(text: string): Promise<number[]> {
   return d.data[0].embedding;
 }
 
-async function extractMetadata(text: string): Promise<Record<string, unknown>> {
+async function extractMetadata(text: string, projectTags: string): Promise<Record<string, unknown>> {
+  const projectLine = projectTags
+    ? `If the content explicitly mentions a known project by name, use its canonical tag as the FIRST topic: ${projectTags}. Do NOT infer a project tag if the project is not clearly referenced in the content.`
+    : `Use descriptive topic tags based on the content.`;
+
   const r = await fetch(`${OPENROUTER_BASE}/chat/completions`, {
     method: "POST",
     headers: { "Authorization": `Bearer ${OPENROUTER_API_KEY}`, "Content-Type": "application/json" },
@@ -31,7 +45,7 @@ async function extractMetadata(text: string): Promise<Record<string, unknown>> {
 - "people": array of people mentioned (empty if none)
 - "action_items": array of implied to-dos (empty if none)
 - "dates_mentioned": array of dates YYYY-MM-DD (empty if none)
-- "topics": array of 1-3 short topic tags (always at least one). If the content explicitly mentions a known project by name, use its canonical tag as the FIRST topic: produce-processor, sbs, delivery, cef, budget, 2brain. Do NOT infer a project tag if the project is not clearly referenced in the content.
+- "topics": array of 1-3 short topic tags (always at least one). ${projectLine}
 - "type": one of "observation", "task", "idea", "reference", "person_note", "meeting", "summary"
 Only extract what's explicitly present in the content. Do not infer or guess topics that are not mentioned.` },
         { role: "user", content: text },
@@ -87,15 +101,18 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const messageTs: string = event.ts;
     if (!messageText || messageText.trim() === "") return new Response("ok", { status: 200 });
 
-    const [embedding, metadata] = await Promise.all([
+    const [embedding, projectTags, metadata] = await Promise.all([
       getEmbedding(messageText),
-      extractMetadata(messageText),
+      getActiveProjectTags(),
+      Promise.resolve(null), // placeholder — metadata needs projectTags first
     ]);
+
+    const meta = await extractMetadata(messageText, projectTags);
 
     const { error } = await supabase.from("thoughts").insert({
       content: messageText,
       embedding,
-      metadata: { ...metadata, source: "slack", slack_ts: messageTs },
+      metadata: { ...meta, source: "slack", slack_ts: messageTs },
     });
 
     if (error) {
@@ -104,14 +121,13 @@ Deno.serve(async (req: Request): Promise<Response> => {
       return new Response("error", { status: 500 });
     }
 
-    const meta = metadata as Record<string, unknown>;
     let confirmation = `Captured as *${meta.type || "thought"}*`;
     if (Array.isArray(meta.topics) && meta.topics.length > 0)
-      confirmation += ` - ${meta.topics.join(", ")}`;
+      confirmation += ` - ${(meta.topics as string[]).join(", ")}`;
     if (Array.isArray(meta.people) && meta.people.length > 0)
-      confirmation += `\nPeople: ${meta.people.join(", ")}`;
+      confirmation += `\nPeople: ${(meta.people as string[]).join(", ")}`;
     if (Array.isArray(meta.action_items) && meta.action_items.length > 0)
-      confirmation += `\nAction items: ${meta.action_items.join("; ")}`;
+      confirmation += `\nAction items: ${(meta.action_items as string[]).join("; ")}`;
 
     await replyInSlack(channel, messageTs, confirmation);
     return new Response("ok", { status: 200 });
