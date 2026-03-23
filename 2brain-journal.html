@@ -838,6 +838,12 @@
     </div>`;
   }
 
+  function filteredCalEvents() {
+    const q = document.getElementById('search').value.toLowerCase().trim();
+    if (!q) return allCalEvents;
+    return allCalEvents.filter(ev => ev.title.toLowerCase().includes(q));
+  }
+
   function renderCalSection(events) {
     if (!events.length) return '';
     const isOpen = openSections.has('Calendar');
@@ -1123,7 +1129,7 @@
 
   function renderChronological() {
     const feed = document.getElementById('feed');
-    const calSection = renderCalSection(allCalEvents);
+    const calSection = renderCalSection(filteredCalEvents());
     if (filtered.length === 0) {
       feed.innerHTML = `<div class="sections">${calSection}</div>`;
       return;
@@ -1189,7 +1195,7 @@
         </div>
       `);
     }
-    feed.innerHTML = `<div class="sections">${renderCalSection(allCalEvents)}${parts.join('')}</div>`;
+    feed.innerHTML = `<div class="sections">${renderCalSection(filteredCalEvents())}${parts.join('')}</div>`;
   }
 
   const KEY_MAP = {
