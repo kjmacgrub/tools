@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
 
     const texts = await Promise.all(ICAL_URLS.map(async url => {
       try {
-        const res = await fetch(url);
+        const res = await fetch(`${url}?_=${Date.now()}`, { cache: 'no-store' });
         return res.ok ? await res.text() : '';
       } catch { return ''; }
     }));
@@ -94,7 +94,7 @@ Deno.serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ events }), {
-      headers: { 'Content-Type': 'application/json', ...CORS },
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...CORS },
     });
   } catch (err) {
     return new Response(JSON.stringify({ error: String(err) }), {

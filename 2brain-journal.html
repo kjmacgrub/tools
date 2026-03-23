@@ -855,12 +855,12 @@
 
   // ── Calendar ──────────────────────────────────────────────────────────────
 
-  async function fetchCalEvents() {
+  async function fetchCalEvents(force) {
     const yearMonth = `${calYear}-${String(calMonth + 1).padStart(2, '0')}`;
-    if (calEventsFetchedMonth === yearMonth) return;
+    if (!force && calEventsFetchedMonth === yearMonth) return;
     try {
       const res = await fetch(
-        `${SUPABASE_URL}/functions/v1/ical-proxy?month=${yearMonth}`
+        `${SUPABASE_URL}/functions/v1/ical-proxy?month=${yearMonth}&_=${Date.now()}`
       );
       const data = await res.json();
       calEventIndex = {};
@@ -889,7 +889,7 @@
 
   async function fetchAllCalEvents() {
     try {
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/ical-proxy`);
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/ical-proxy?_=${Date.now()}`);
       const data = await res.json();
       const n = new Date();
       const today = `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
@@ -901,6 +901,12 @@
       console.error('fetchAllCalEvents failed', e);
     }
   }
+
+  // Refresh calendar events every 5 minutes
+  setInterval(() => {
+    fetchAllCalEvents();
+    if (viewMode === 'calendar') fetchCalEvents(true);
+  }, 5 * 60 * 1000);
 
   function goToToday() {
     const now = new Date();
@@ -1009,6 +1015,7 @@
         <span class="cal-title">${MONTHS[calMonth]} ${calYear}</span>
         <button class="cal-nav-btn" onclick="shiftMonth(1)">›</button>
         <button class="cal-today-btn" onclick="goToToday()">today</button>
+        <button class="cal-today-btn" onclick="fetchCalEvents(true);fetchAllCalEvents()" title="Refresh calendar">↻</button>
       </div>
       <div class="sections" style="margin-bottom:16px">${renderCalSection(allCalEvents)}</div>
       <div class="cal-grid">${dowCells}${empties}${dayCells.join('')}</div>
