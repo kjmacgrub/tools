@@ -638,6 +638,58 @@
     padding: 0 18px 8px;
     display: none;
   }
+
+  .entry-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .entry-action-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    padding: 3px 10px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .entry-action-btn:hover { color: var(--text); border-color: var(--text-mid); }
+  .entry-action-btn.delete:hover { color: #ef4444; border-color: #ef4444; }
+
+  .entry-edit-area {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    line-height: 1.6;
+    resize: vertical;
+    min-height: 120px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .entry-edit-area:focus { border-color: var(--type-journal); }
+
+  .journal-select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 6px 10px;
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s;
+    flex: 1;
+  }
+  .journal-select:focus { border-color: var(--accent); }
+  .journal-select option { background: var(--surface); color: var(--text); }
 </style>
 </head>
 <body>
@@ -665,14 +717,13 @@
     <span class="filter-label">type</span>
     <span class="chip active" data-type="all" onclick="setType('all')"><span class="hk">a</span>ll</span>
     <span class="chip" data-type="idea" onclick="setType('idea')"><span class="hk">i</span>dea</span>
-    <span class="chip" data-type="meeting" onclick="setType('meeting')"><span class="hk">m</span>eeting</span>
+    <span class="chip" data-type="meeting" onclick="setType('meeting')"><span class="hk">M</span>eeting</span>
     <span class="chip" data-type="observation" onclick="setType('observation')"><span class="hk">o</span>bservation</span>
     <span class="chip" data-type="person_note" onclick="setType('person_note')"><span class="hk">p</span>erson</span>
     <span class="chip" data-type="reference" onclick="setType('reference')"><span class="hk">r</span>eference</span>
     <span class="chip" data-type="summary" onclick="setType('summary')"><span class="hk">s</span>ummary</span>
     <span class="chip" data-type="task" onclick="setType('task')"><span class="hk">t</span>ask</span>
     <span class="chip" data-type="journal" onclick="setType('journal')"><span class="hk">J</span>ournal</span>
-    <span class="chip" onclick="openJournal()" style="margin-left:auto;border-color:var(--type-journal);color:var(--type-journal)"><span class="hk">j</span> + new</span>
   </div>
 </div>
 
@@ -692,6 +743,10 @@
         <label style="width:auto;margin-left:6px">time</label>
         <input type="time" id="journal-time">
       </div>
+      <div class="journal-field-row">
+        <label>project</label>
+        <select class="journal-select" id="journal-project"><option value="">none</option></select>
+      </div>
       <textarea class="journal-textarea" id="journal-content" placeholder="what's on your mind..."></textarea>
     </div>
     <div class="journal-error" id="journal-error"></div>
@@ -702,9 +757,74 @@
   </div>
 </div>
 
+<!-- Meeting entry modal -->
+<div class="journal-overlay" id="meeting-overlay" onclick="if(event.target===this)closeMeeting()">
+  <div class="journal-modal">
+    <div class="journal-modal-header">
+      <span class="journal-modal-title" style="color:#10b981">meeting capture</span>
+    </div>
+    <div class="journal-modal-body">
+      <div class="journal-field-row">
+        <label>date</label>
+        <input type="date" id="meeting-date">
+        <label style="width:auto;margin-left:6px">time</label>
+        <input type="time" id="meeting-time">
+      </div>
+      <div class="journal-field-row">
+        <label>topic</label>
+        <input type="text" id="meeting-topic" placeholder="e.g. Nate Jones — AI Agents video" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:6px 10px;color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:13px;outline:none">
+      </div>
+      <div class="journal-field-row">
+        <label style="width:auto">project</label>
+        <select class="journal-select" id="meeting-project"><option value="">none</option></select>
+      </div>
+      <textarea class="journal-textarea" id="meeting-notes" placeholder="what was discussed..."></textarea>
+    </div>
+    <div class="journal-error" id="meeting-error"></div>
+    <div class="journal-modal-footer">
+      <button class="journal-btn journal-btn-cancel" onclick="closeMeeting()">cancel</button>
+      <button class="journal-btn journal-btn-save" id="meeting-save" onclick="saveMeeting()" style="border-color:#10b981;color:#10b981;background:rgba(16,185,129,0.12)">save</button>
+    </div>
+  </div>
+</div>
+
 <script>
   const SUPABASE_URL = 'https://wiabftxfumvzbttqgmtq.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_y0N-mQ5ayjlQPAHqiVisGQ_dDwDB380';
+
+  let activeProjects = [];
+
+  function buildProjectOptions() {
+    // Gather all unique app/group names from loaded thoughts
+    const groups = new Set();
+    for (const t of allThoughts) {
+      groups.add(detectApp(t));
+    }
+    // Also add active projects from DB
+    for (const p of activeProjects) {
+      groups.add(p.name);
+    }
+    const sorted = [...groups].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+    const options = '<option value="">none</option>' +
+      sorted.map(g => `<option value="${g}">${g}</option>`).join('');
+    document.getElementById('journal-project').innerHTML = options;
+    document.getElementById('meeting-project').innerHTML = options;
+  }
+
+  async function fetchProjects() {
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/projects?active=eq.true&select=tag,name&order=name`,
+        { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+      );
+      if (!res.ok) return;
+      activeProjects = await res.json();
+    } catch (e) {
+      console.error('fetchProjects failed', e);
+    }
+  }
+
+  fetchProjects();
 
   const APP_ORDER = ['Delivery', 'SBS', 'CEF', 'Budget', '2Brain', 'Vehicle', 'General'];
 
@@ -972,6 +1092,13 @@
       ? `<span class="type-badge" style="background:rgba(0,200,150,0.07);color:var(--accent);opacity:0.7">${esc(appLabel)}</span>`
       : '';
 
+    const actions = type === 'journal'
+      ? `<div class="entry-actions">
+          <button class="entry-action-btn" onclick="event.stopPropagation();editEntry('${t.id}')">edit</button>
+          <button class="entry-action-btn delete" onclick="event.stopPropagation();deleteEntry('${t.id}')">delete</button>
+        </div>`
+      : '';
+
     return `<div class="entry-item" data-id="${t.id}">
       <div class="entry-row" onclick="toggleEntry('${t.id}')">
         <span class="entry-date">${dateStr}</span>
@@ -980,8 +1107,9 @@
         <span class="entry-preview">${esc(previewText(t.content))}</span>
       </div>
       <div class="entry-detail">
-        <div class="entry-content">${renderMarkdown(t.content)}</div>
+        <div class="entry-content" id="content-${t.id}">${renderMarkdown(t.content)}</div>
         ${pills ? `<div class="detail-meta">${pills}</div>` : ''}
+        ${actions}
       </div>
     </div>`;
   }
@@ -1366,6 +1494,7 @@
     document.getElementById('journal-date').value = now.toISOString().substring(0, 10);
     document.getElementById('journal-time').value = now.toTimeString().substring(0, 5);
     document.getElementById('journal-content').value = '';
+    document.getElementById('journal-project').value = '';
     document.getElementById('journal-error').style.display = 'none';
     document.getElementById('journal-save').disabled = false;
     document.getElementById('journal-overlay').classList.add('open');
@@ -1383,6 +1512,8 @@
     const dateVal = document.getElementById('journal-date').value;
     const timeVal = document.getElementById('journal-time').value;
     const created_at = `${dateVal}T${timeVal}:00`;
+    const project = document.getElementById('journal-project').value;
+    const topics = project ? [project] : [];
 
     const saveBtn = document.getElementById('journal-save');
     const errorEl = document.getElementById('journal-error');
@@ -1400,7 +1531,7 @@
         },
         body: JSON.stringify({
           content,
-          metadata: { type: 'journal', topics: [], people: [], action_items: [] },
+          metadata: { type: 'journal', topics, people: [], action_items: [] },
           created_at,
         }),
       });
@@ -1422,9 +1553,160 @@
     }
   }
 
+  // ── Meeting entry modal ──────────────────────────────────────────────────
+
+  function openMeeting() {
+    const now = new Date();
+    document.getElementById('meeting-date').value = now.toISOString().substring(0, 10);
+    document.getElementById('meeting-time').value = now.toTimeString().substring(0, 5);
+    document.getElementById('meeting-topic').value = '';
+    document.getElementById('meeting-notes').value = '';
+    document.getElementById('meeting-project').value = '';
+    document.getElementById('meeting-error').style.display = 'none';
+    document.getElementById('meeting-save').disabled = false;
+    document.getElementById('meeting-overlay').classList.add('open');
+    setTimeout(() => document.getElementById('meeting-topic').focus(), 50);
+  }
+
+  function closeMeeting() {
+    document.getElementById('meeting-overlay').classList.remove('open');
+  }
+
+  async function saveMeeting() {
+    const topic = document.getElementById('meeting-topic').value.trim();
+    const notes = document.getElementById('meeting-notes').value.trim();
+    if (!topic && !notes) return;
+
+    const dateVal = document.getElementById('meeting-date').value;
+    const timeVal = document.getElementById('meeting-time').value;
+    const created_at = `${dateVal}T${timeVal}:00`;
+    const project = document.getElementById('meeting-project').value;
+    const topics = [topic, project].filter(Boolean);
+
+    const parts = [];
+    if (topic) parts.push(`## ${topic}`);
+    if (notes) parts.push(notes);
+    const content = parts.join('\n\n');
+
+    const saveBtn = document.getElementById('meeting-save');
+    const errorEl = document.getElementById('meeting-error');
+    saveBtn.disabled = true;
+    errorEl.style.display = 'none';
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/thoughts`, {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json',
+          Prefer: 'return=representation',
+        },
+        body: JSON.stringify({
+          content,
+          metadata: { type: 'meeting', topics, people: [], action_items: [] },
+          created_at,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`${res.status}: ${err}`);
+      }
+
+      const [newEntry] = await res.json();
+      allThoughts.unshift(newEntry);
+      buildDateIndex(allThoughts);
+      applyFilters();
+      closeMeeting();
+    } catch (err) {
+      errorEl.textContent = err.message;
+      errorEl.style.display = 'block';
+      saveBtn.disabled = false;
+    }
+  }
+
+  // ── Edit / Delete journal entries ─────────────────────────────────────────
+
+  function editEntry(id) {
+    const t = allThoughts.find(t => t.id === id);
+    if (!t) return;
+    const contentEl = document.getElementById(`content-${id}`);
+    const actionsEl = contentEl.closest('.entry-detail').querySelector('.entry-actions');
+    contentEl.innerHTML = `<textarea class="entry-edit-area" id="edit-${id}">${esc(t.content)}</textarea>`;
+    actionsEl.innerHTML = `
+      <button class="entry-action-btn" onclick="event.stopPropagation();saveEdit('${id}')" style="border-color:var(--type-journal);color:var(--type-journal)">save</button>
+      <button class="entry-action-btn" onclick="event.stopPropagation();cancelEdit('${id}')">cancel</button>
+    `;
+    document.getElementById(`edit-${id}`).focus();
+  }
+
+  function cancelEdit(id) {
+    const t = allThoughts.find(t => t.id === id);
+    if (!t) return;
+    const contentEl = document.getElementById(`content-${id}`);
+    const actionsEl = contentEl.closest('.entry-detail').querySelector('.entry-actions');
+    contentEl.innerHTML = renderMarkdown(t.content);
+    actionsEl.innerHTML = `
+      <button class="entry-action-btn" onclick="event.stopPropagation();editEntry('${id}')">edit</button>
+      <button class="entry-action-btn delete" onclick="event.stopPropagation();deleteEntry('${id}')">delete</button>
+    `;
+  }
+
+  async function saveEdit(id) {
+    const textarea = document.getElementById(`edit-${id}`);
+    const content = textarea.value.trim();
+    if (!content) return;
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/thoughts?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json',
+          Prefer: 'return=representation',
+        },
+        body: JSON.stringify({ content }),
+      });
+
+      if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+
+      const [updated] = await res.json();
+      const idx = allThoughts.findIndex(t => t.id === id);
+      if (idx !== -1) allThoughts[idx] = updated;
+      applyFilters();
+    } catch (err) {
+      alert('Save failed: ' + err.message);
+    }
+  }
+
+  async function deleteEntry(id) {
+    if (!confirm('Delete this journal entry?')) return;
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/thoughts?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+        },
+      });
+
+      if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+
+      allThoughts = allThoughts.filter(t => t.id !== id);
+      buildDateIndex(allThoughts);
+      applyFilters();
+    } catch (err) {
+      alert('Delete failed: ' + err.message);
+    }
+  }
+
   const KEY_MAP = {
     'a': 'all',
     'i': 'idea',
+    'j': 'journal',
     'm': 'meeting',
     'o': 'observation',
     'p': 'person_note',
@@ -1459,20 +1741,25 @@
     renderFeed();
   }
 
+  function isModalOpen() {
+    return document.getElementById('journal-overlay').classList.contains('open')
+        || document.getElementById('meeting-overlay').classList.contains('open');
+  }
+
   document.addEventListener('keydown', e => {
-    // Close journal modal on Escape
-    if (e.key === 'Escape' && document.getElementById('journal-overlay').classList.contains('open')) {
-      closeJournal();
-      return;
+    // Close modals on Escape
+    if (e.key === 'Escape') {
+      if (document.getElementById('journal-overlay').classList.contains('open')) { closeJournal(); return; }
+      if (document.getElementById('meeting-overlay').classList.contains('open')) { closeMeeting(); return; }
     }
-    // Cmd/Ctrl+Enter to save journal when modal is open
-    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && document.getElementById('journal-overlay').classList.contains('open')) {
-      saveJournal();
-      return;
+    // Cmd/Ctrl+Enter to save in open modal
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+      if (document.getElementById('journal-overlay').classList.contains('open')) { saveJournal(); return; }
+      if (document.getElementById('meeting-overlay').classList.contains('open')) { saveMeeting(); return; }
     }
-    // Don't handle shortcuts while typing in search or journal modal
+    // Don't handle shortcuts while typing in search or modals
     if (document.activeElement === document.getElementById('search')) return;
-    if (document.getElementById('journal-overlay').classList.contains('open')) return;
+    if (isModalOpen()) return;
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     if (viewMode === 'calendar' && ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) {
       e.preventDefault();
@@ -1487,8 +1774,8 @@
     if (e.key === 'c') { setView('calendar'); return; }
     if (e.key === 'x') { toggleCollapseAll(); return; }
     if (e.key === 'l') { toggleTheme(); return; }
-    if (e.key === 'J') { setType('journal'); return; }
-    if (e.key === 'j') { openJournal(); return; }
+    if (e.key === 'J') { openJournal(); return; }
+    if (e.key === 'M') { openMeeting(); return; }
     const type = KEY_MAP[e.key];
     if (type) setType(type);
   });
@@ -1501,6 +1788,7 @@
     .then(data => {
       allThoughts = data;
       buildDateIndex(data);
+      buildProjectOptions();
       applyFilters();
     })
     .catch(err => {
