@@ -69,17 +69,18 @@
 
   .controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
 
-  .search-wrap { position: relative; }
+  .search-wrap { position: relative; display: flex; align-items: center; gap: 6px; }
 
   .search-box {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 4px;
-    padding: 8px 32px 8px 12px;
+    padding: 8px 12px;
     color: var(--text);
     font-family: 'IBM Plex Sans', sans-serif;
     font-size: 13px;
-    width: 100%;
+    flex: 1;
+    min-width: 0;
     outline: none;
     transition: border-color 0.15s;
   }
@@ -87,20 +88,19 @@
   .search-box::placeholder { color: var(--text-dim); }
 
   .search-clear {
-    position: absolute;
-    right: 8px;
-    top: 50%;
-    transform: translateY(-50%);
     background: none;
-    border: none;
+    border: 1px solid var(--border);
+    border-radius: 3px;
     color: var(--text-dim);
-    font-size: 14px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
     cursor: pointer;
-    padding: 2px 4px;
-    line-height: 1;
+    padding: 4px 8px;
+    white-space: nowrap;
     display: none;
+    flex-shrink: 0;
   }
-  .search-clear:hover { color: var(--text); }
+  .search-clear:hover { color: var(--text); border-color: var(--accent); }
 
   .filter-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 
@@ -127,6 +127,73 @@
   }
   .chip:hover { border-color: var(--accent); color: var(--text); }
   .chip.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+
+  .topic-filter-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text-dim);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 4px 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .topic-filter-btn:hover { border-color: var(--accent); color: var(--text); }
+  .topic-filter-btn.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+  .topic-filter-dropdown {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 4px);
+    z-index: 1000;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    min-width: 180px;
+    max-height: 280px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+  .topic-filter-dropdown input {
+    background: var(--bg);
+    border: none;
+    border-bottom: 1px solid var(--border);
+    padding: 8px 10px;
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12px;
+    outline: none;
+  }
+  .topic-filter-dropdown input::placeholder { color: var(--text-dim); }
+  .topic-filter-list {
+    overflow-y: auto;
+    flex: 1;
+  }
+  .topic-filter-item {
+    padding: 5px 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    color: var(--text-mid);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .topic-filter-item:hover { background: var(--accent-dim); color: var(--accent); }
+  .topic-filter-item.current { color: var(--accent); font-weight: 500; }
+  .topic-filter-item .tfi-count {
+    font-size: 9px;
+    color: var(--text-dim);
+    margin-left: 8px;
+  }
 
   .stats-bar {
     font-family: 'IBM Plex Mono', monospace;
@@ -217,6 +284,29 @@
   .badge-summary     { background: rgba(6,182,212,0.12);  color: var(--type-summary); }
   .badge-journal     { background: rgba(229,122,68,0.12); color: var(--type-journal); }
   .badge-event       { background: rgba(249,115,22,0.12); color: var(--today); }
+  .type-badge.editable { cursor: pointer; }
+  .type-badge.editable:hover { outline: 1px solid var(--accent); outline-offset: 1px; }
+  .type-dropdown {
+    position: fixed;
+    z-index: 1000;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 4px 0;
+    min-width: 110px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+  .type-dropdown .td-item {
+    padding: 5px 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    color: var(--text-mid);
+  }
+  .type-dropdown .td-item:hover { background: var(--accent-dim); color: var(--accent); }
+  .type-dropdown .td-item.current { color: var(--accent); font-weight: 500; }
   .hk { color: var(--today); }
 
   .entry-preview {
@@ -731,8 +821,9 @@
 
 <div class="controls">
   <div class="search-wrap">
-    <input class="search-box" id="search" placeholder="search thoughts..." oninput="onSearchInput()">
-    <button class="search-clear" id="search-clear" onclick="clearSearch()" tabindex="-1">✕</button>
+    <input class="search-box" id="search" placeholder="search thoughts... or topic:name" oninput="onSearchInput()">
+    <button class="topic-filter-btn" id="topic-btn" onclick="toggleTopicFilterDropdown()">topic</button>
+    <button class="search-clear" id="search-clear" onclick="clearSearch()" tabindex="-1">✕ clear</button>
   </div>
   <div class="filter-row">
     <span class="filter-label"><span class="hk">v</span>iew</span>
@@ -990,33 +1081,151 @@
     applyFilters();
   }
 
-  function onSearchInput() {
+  function setTopicFilter(topic) {
+    activeTopic = topic.toLowerCase();
+    updateTopicBtn();
+    closeTopicFilterDropdown();
+    updateClearBtn();
+    applyFilters();
+  }
+
+  function updateTopicBtn() {
+    const btn = document.getElementById('topic-btn');
+    if (activeTopic === 'all') {
+      btn.textContent = 'topic';
+      btn.classList.remove('active');
+    } else {
+      btn.textContent = activeTopic;
+      btn.classList.add('active');
+    }
+  }
+
+  let _topicFilterCleanup = null;
+  function closeTopicFilterDropdown() {
+    document.querySelectorAll('.topic-filter-dropdown').forEach(el => el.remove());
+    if (_topicFilterCleanup) { document.removeEventListener('click', _topicFilterCleanup); _topicFilterCleanup = null; }
+  }
+
+  function toggleTopicFilterDropdown() {
+    const existing = document.querySelector('.topic-filter-dropdown');
+    if (existing) { closeTopicFilterDropdown(); return; }
+
+    const wrap = document.querySelector('.search-wrap');
+    const dd = document.createElement('div');
+    dd.className = 'topic-filter-dropdown';
+    dd.onclick = e => e.stopPropagation();
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = 'filter topics...';
+    dd.appendChild(input);
+
+    const list = document.createElement('div');
+    list.className = 'topic-filter-list';
+    dd.appendChild(list);
+
+    // build frequency map
+    const freq = new Map();
+    for (const t of allThoughts) for (const tp of (t.metadata?.topics || [])) freq.set(tp, (freq.get(tp) || 0) + 1);
+    const allTopicsSorted = getAllTopics().sort((a, b) => (freq.get(b) || 0) - (freq.get(a) || 0));
+
+    function renderItems(filter) {
+      list.innerHTML = '';
+      const q = filter.toLowerCase().trim();
+      // "all" option first
+      const allItem = document.createElement('div');
+      allItem.className = 'topic-filter-item' + (activeTopic === 'all' ? ' current' : '');
+      allItem.innerHTML = 'all topics';
+      allItem.onclick = () => setTopicFilter('all');
+      list.appendChild(allItem);
+
+      const matches = q ? allTopicsSorted.filter(tp => tp.toLowerCase().includes(q)) : allTopicsSorted;
+      for (const tp of matches) {
+        const item = document.createElement('div');
+        item.className = 'topic-filter-item' + (tp.toLowerCase() === activeTopic ? ' current' : '');
+        item.innerHTML = `<span>${tp}</span><span class="tfi-count">${freq.get(tp) || 0}</span>`;
+        item.onclick = () => setTopicFilter(tp);
+        list.appendChild(item);
+      }
+    }
+
+    renderItems('');
+    input.addEventListener('input', () => renderItems(input.value));
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeTopicFilterDropdown();
+      if (e.key === 'Enter') {
+        const first = list.querySelector('.topic-filter-item:not(.current), .topic-filter-item');
+        if (first) first.click();
+      }
+    });
+
+    wrap.appendChild(dd);
+    input.focus();
+
+    setTimeout(() => {
+      _topicFilterCleanup = (e) => {
+        if (!dd.contains(e.target) && e.target.id !== 'topic-btn') closeTopicFilterDropdown();
+      };
+      document.addEventListener('click', _topicFilterCleanup);
+    }, 0);
+  }
+
+  function updateClearBtn() {
     const clear = document.getElementById('search-clear');
-    if (clear) clear.style.display = document.getElementById('search').value ? '' : 'none';
+    if (clear) clear.style.display = (document.getElementById('search').value || activeTopic !== 'all') ? 'inline-block' : 'none';
+  }
+
+  function onSearchInput() {
+    updateClearBtn();
     applyFilters();
   }
 
   function clearSearch() {
     const input = document.getElementById('search');
     input.value = '';
-    document.getElementById('search-clear').style.display = 'none';
+    activeTopic = 'all';
+    updateTopicBtn();
+    updateClearBtn();
     input.focus();
     applyFilters();
   }
 
+  let activeTopic = 'all';
+
+  function parseSearch(raw) {
+    const topicPrefixes = [];
+    const rest = [];
+    for (const token of raw.split(/\s+/).filter(Boolean)) {
+      const m = token.match(/^topic:(.+)$/i);
+      if (m) topicPrefixes.push(m[1].toLowerCase());
+      else rest.push(token);
+    }
+    return { topicPrefixes, freeText: rest.join(' ') };
+  }
+
   function applyFilters() {
-    const q = document.getElementById('search').value.toLowerCase().trim();
+    const raw = document.getElementById('search').value.toLowerCase().trim();
+    const { topicPrefixes, freeText } = parseSearch(raw);
     filtered = allThoughts.filter(t => {
       const meta = t.metadata || {};
       if (activeType !== 'all' && meta.type !== activeType) return false;
-      if (q) {
+      // topic chip filter
+      if (activeTopic !== 'all') {
+        if (!(meta.topics || []).some(tp => tp.toLowerCase() === activeTopic)) return false;
+      }
+      // topic: prefix filters from search box
+      for (const tp of topicPrefixes) {
+        if (!(meta.topics || []).some(t => t.toLowerCase().includes(tp))) return false;
+      }
+      // free text search
+      if (freeText) {
         const hay = [
           t.content,
           (meta.topics || []).join(' '),
           (meta.people || []).join(' '),
           (meta.action_items || []).join(' '),
         ].join(' ').toLowerCase();
-        if (!hay.includes(q)) return false;
+        if (!hay.includes(freeText)) return false;
       }
       return true;
     });
@@ -1078,8 +1287,7 @@
     const dateStr = new Date(t.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
     const pills = [
-      ...(meta.people || []).map(p => `<span class="meta-pill person">${esc(p)}</span>`),
-      ...(meta.topics || []).map(tp => `<span class="meta-pill topic">${esc(tp)}<span class="pill-x" onclick="event.stopPropagation();removeTopic('${t.id}',decodeURIComponent(atob('${btoa(encodeURIComponent(tp))}')))">&times;</span></span>`),
+      ...(meta.topics || []).map(tp => `<span class="meta-pill topic"><span onclick="event.stopPropagation();setTopicFilter('${esc(tp)}')" style="cursor:pointer" title="filter by this topic">${esc(tp)}</span><span class="pill-x" onclick="event.stopPropagation();removeTopic('${t.id}',decodeURIComponent(atob('${btoa(encodeURIComponent(tp))}')))">&times;</span></span>`),
       `<span class="meta-pill add-topic" onclick="event.stopPropagation();showTopicDropdown(this,'${t.id}')">+ topic</span>`,
       ...(meta.action_items || []).map(a => `<span class="meta-pill action">→ ${esc(a)}</span>`),
     ].join('');
@@ -1098,7 +1306,7 @@
     return `<div class="entry-item" data-id="${t.id}">
       <div class="entry-row" onclick="toggleEntry('${t.id}')">
         <span class="entry-date">${dateStr}</span>
-        <span class="type-badge badge-${type}">${type}</span>
+        <span class="type-badge badge-${type} editable" onclick="event.stopPropagation();showTypeDropdown(this,'${t.id}','${type}')">${type}</span>
         ${appBadge}
         <span class="entry-preview">${esc(previewText(t.content))}</span>
       </div>
@@ -1700,9 +1908,64 @@
       const [updated] = await res.json();
       const idx = allThoughts.findIndex(t => t.id === id);
       if (idx !== -1) allThoughts[idx] = updated;
+
       applyFilters();
     } catch (err) {
       alert('Topic update failed: ' + err.message);
+    }
+  }
+
+  const EDITABLE_TYPES = ['thought', 'task', 'reference', 'journal', 'meeting', 'summary'];
+
+  let _typeDropdownCleanup = null;
+  function closeTypeDropdown() {
+    document.querySelectorAll('.type-dropdown').forEach(el => el.remove());
+    if (_typeDropdownCleanup) { document.removeEventListener('click', _typeDropdownCleanup); _typeDropdownCleanup = null; }
+  }
+
+  function showTypeDropdown(badge, id, currentType) {
+    closeTypeDropdown();
+    const dd = document.createElement('div');
+    dd.className = 'type-dropdown';
+    for (const tp of EDITABLE_TYPES) {
+      const item = document.createElement('div');
+      item.className = 'td-item' + (tp === currentType ? ' current' : '');
+      item.textContent = tp;
+      item.onclick = (e) => { e.stopPropagation(); closeTypeDropdown(); if (tp !== currentType) patchType(id, tp); };
+      dd.appendChild(item);
+    }
+    const rect = badge.getBoundingClientRect();
+    dd.style.left = rect.left + 'px';
+    dd.style.top = (rect.bottom + 4) + 'px';
+    document.body.appendChild(dd);
+    setTimeout(() => {
+      _typeDropdownCleanup = () => closeTypeDropdown();
+      document.addEventListener('click', _typeDropdownCleanup);
+    }, 0);
+  }
+
+  async function patchType(id, newType) {
+    const t = allThoughts.find(t => t.id === id);
+    if (!t) return;
+    const metadata = { ...t.metadata, type: newType };
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/thoughts?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json',
+          Prefer: 'return=representation',
+        },
+        body: JSON.stringify({ metadata }),
+      });
+      if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+      const [updated] = await res.json();
+      const idx = allThoughts.findIndex(t => t.id === id);
+      if (idx !== -1) allThoughts[idx] = updated;
+      applyFilters();
+    } catch (err) {
+      alert('Type update failed: ' + err.message);
     }
   }
 
@@ -1888,6 +2151,7 @@
       allThoughts = data;
       buildDateIndex(data);
       buildProjectOptions();
+
       applyFilters();
     })
     .catch(err => {
